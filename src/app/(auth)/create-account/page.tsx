@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/16/solid"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { signup } from "../actions"
 
 type CreateAccountData = {
 	email: string
@@ -67,37 +68,24 @@ export default function CreateAccount() {
 		}
 	}
 
-	const onSubmit = (e: React.FormEvent) => {
-		e.preventDefault()
-		const form = new FormData(e.currentTarget as HTMLFormElement)
-
-		const newErrors: { [key: string]: string } = {}
-
-		const email = String(form.get("email") ?? "")
-		const password = String(form.get("password") ?? "")
-		const confirmPassword = String(form.get("confirmPassword") ?? "")
+	async function onSubmit(formData: FormData) {
+		const newErrors: Record<string, string> = {}
+		const email = String(formData.get("email") ?? "")
+		const password = String(formData.get("password") ?? "")
+		const confirmPassword = String(formData.get("confirmPassword") ?? "")
+		const code = String(formData.get("adminCode") ?? "")
 
 		if (!email) newErrors.email = "Enter an email"
 		if (!password) newErrors.password = "Enter a password"
-		if (password != confirmPassword) {
-			newErrors.confirmPassword = "Passwords do not match"
-		}
-		if (!adminCode) {
-			newErrors.adminCode = "Enter admin code"
-		} else if (adminCode !== ADMIN_CODE) {
-			newErrors.adminCode = "Invalid admin invite code"
-		}
+		if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match"
+		if (!code) newErrors.adminCode = "Enter admin code"
+		else if (code !== ADMIN_CODE) newErrors.adminCode = "Invalid admin invite code"
 
 		setErrors(newErrors)
 
-		if (Object.keys(newErrors).length > 0) {
-			return
-		}
+		if (Object.keys(newErrors).length > 0) return
 
-		const data: CreateAccountData = { email, password, adminCode }
-		setSubmitted(data)
-		console.log("user created with: ", data)
-		//TODO: Supabase Auth Create user logic
+		await signup(formData)
 	}
 
 	return (
@@ -108,7 +96,7 @@ export default function CreateAccount() {
 				<h1 className="text-sm text-gray-700 mt-1">Secure Admin Access Only</h1>
 				<Form
 					className="flex flex-col w-full max-w-lg bg-white p-6 rounded-lg shadow-lg shadow-gray-300 mt-5"
-					onSubmit={onSubmit}
+					action={onSubmit}
 				>
 					<div className="p-1">
 						<h1 className="text-center font-bold">Create Admin Account</h1>
@@ -289,10 +277,10 @@ export default function CreateAccount() {
 							type="button"
 							className="text-xs text-blue-600 font-medium mt-4 hover:underline"
 							onClick={() => {
-								router.push("/forgot-password")
+								router.push("/login")
 							}}
 						>
-							Forgot your password?
+							Return to login
 						</button>
 					</div>
 				</Form>

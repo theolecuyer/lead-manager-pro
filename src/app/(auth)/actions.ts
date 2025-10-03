@@ -20,7 +20,6 @@ export async function login(formData: FormData) {
 		redirect("/error")
 	}
 
-	// ✅ if login works, go straight to admin dashboard
 	revalidatePath("/", "layout")
 	redirect("/admin/dashboard")
 }

@@ -130,7 +130,7 @@ export default function LoginPage() {
 						Sign In
 					</Button>
 
-					<div className="flex items-center justify-center my-3">
+					<div className="flex items-center justify-center my-1">
 						<button
 							type="button"
 							className="text-xs text-blue-600 font-medium mt-4 hover:underline"

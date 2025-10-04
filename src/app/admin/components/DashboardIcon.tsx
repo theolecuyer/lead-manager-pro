@@ -54,7 +54,7 @@ export default function DashboardIcon(dashboardIconProps: DashboardIconProps) {
 					className={`${dashboardIconProps.color1} px-3 py-5 sm:px-4 sm:py-6 lg:px-1.5 lg:py-3.5 xl:px-4 xl:py-6 rounded-lg`}
 				>
 					<dashboardIconProps.icon
-						className={`h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 ${dashboardIconProps.color2}`}
+						className={`h-8 w-8 xl:h-10 xl:w-10 ${dashboardIconProps.color2}`}
 					/>
 				</div>
 			</div>

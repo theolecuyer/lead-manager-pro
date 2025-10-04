@@ -1,12 +1,15 @@
+// providers/AuthProvider.tsx
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "../../utils/supabase/client"
 import type { User } from "@supabase/supabase-js"
 
+type Profile = { username?: string; full_name?: string } | null
+
 type AuthContextType = {
 	user: User | null
-	profile: { username: string; full_name: string } | null
+	profile: Profile
 	loading: boolean
 }
 
@@ -16,40 +19,64 @@ const AuthContext = createContext<AuthContextType>({
 	loading: true,
 })
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+	children,
+	initialUser,
+	initialProfile,
+}: {
+	children: React.ReactNode
+	initialUser?: User | null
+	initialProfile?: Profile
+}) {
 	const supabase = createClient()
-	const [user, setUser] = useState<User | null>(null)
-	const [profile, setProfile] = useState<{ username: string; full_name: string } | null>(null)
-	const [loading, setLoading] = useState(true)
+	const [user, setUser] = useState<User | null>(initialUser ?? null)
+	const [profile, setProfile] = useState<Profile>(initialProfile ?? null)
+	const [loading, setLoading] = useState<boolean>(false)
 
 	useEffect(() => {
-		async function loadUser() {
+		let mounted = true
+		async function loadUserIfAbsent() {
+			if (initialUser) return
 			setLoading(true)
-			const {
-				data: { user },
-			} = await supabase.auth.getUser()
-			setUser(user ?? null)
+			try {
+				const { data } = await supabase.auth.getUser()
+				if (!mounted) return
+				setUser(data.user ?? null)
 
-			if (user) {
-				const { data, error } = await supabase
-					.from("profiles")
-					.select("username, full_name")
-					.eq("id", user.id)
-					.single()
-				if (!error && data) setProfile(data)
+				if (data.user) {
+					const { data: p, error } = await supabase
+						.from("profiles")
+						.select("username, full_name")
+						.eq("id", data.user.id)
+						.single()
+					if (!error && p) setProfile(p)
+				}
+			} catch (err) {
+				console.error("AuthProvider loadUserIfAbsent error:", err)
+			} finally {
+				if (mounted) setLoading(false)
 			}
-
-			setLoading(false)
 		}
+		loadUserIfAbsent()
+		return () => {
+			mounted = false
+		}
+	}, [supabase, initialUser])
 
-		loadUser()
-
+	useEffect(() => {
 		const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-			setUser(session?.user ?? null)
-			if (!session) setProfile(null)
+			const u = session?.user ?? null
+			setUser(u)
+			if (!u) setProfile(null)
 		})
 
-		return () => subscription.subscription.unsubscribe()
+		return () => {
+			try {
+				if ((subscription as any)?.unsubscribe) (subscription as any).unsubscribe()
+				else if ((subscription as any)?.subscription?.unsubscribe)
+					(subscription as any).subscription.unsubscribe()
+			} catch (e) {}
+		}
 	}, [supabase])
 
 	return (

@@ -65,7 +65,7 @@ export default function AdminDashboard() {
 			<div>
 				<div className="bg-white p-5 rounded shadow col-span-4">
 					<h1 className="font-bold font-sans">Client Overview</h1>
-					<form className="relative max-w-md mb-4" onSubmit={(e) => e.preventDefault()}>
+					<form className="relative max-w-md my-5" onSubmit={(e) => e.preventDefault()}>
 						<input
 							type="text"
 							placeholder="Search clients..."
@@ -80,13 +80,6 @@ export default function AdminDashboard() {
 			<div>
 				<div className="bg-white p-5 rounded shadow col-span-4">Big Box 2</div>
 			</div>
-			<h1>Welcome, {profile?.username}</h1>
-
-			<form method="POST" action="/signout">
-				<button type="submit" className="px-4 py-2 mt-4 bg-red-500 text-white rounded">
-					Sign Out
-				</button>
-			</form>
 		</div>
 	)
 }

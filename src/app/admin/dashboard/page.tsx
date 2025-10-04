@@ -1,9 +1,8 @@
 "use client"
 
 import { redirect } from "next/navigation"
-import { createClient } from "../../../../utils/supabase/client"
-import { type User } from "@supabase/supabase-js"
 import DashboardIcon from "../components/DashboardIcon"
+import { useAuth } from "@/providers/AuthProvider"
 import {
 	ArrowUpTrayIcon,
 	CreditCardIcon,
@@ -11,67 +10,17 @@ import {
 	UserGroupIcon,
 	MagnifyingGlassIcon,
 } from "@heroicons/react/24/solid"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useEffect } from "react"
 
 export default function AdminDashboard() {
+	const { user, profile, loading } = useAuth()
 	const [search, setSearch] = useState("")
-	const [user, setUser] = useState<any>(null)
-	const [loading, setLoading] = useState(true)
-	const [username, setUsername] = useState("")
-	const supabase = createClient()
-
-	// if (!user) {
-	// 	redirect("/login")
-	// }
 
 	useEffect(() => {
-		async function fetchUser() {
-			const {
-				data: { user },
-				error,
-			} = await supabase.auth.getUser()
+		if (!loading && !user) redirect("/login")
+	}, [user, loading])
 
-			if (error) {
-				console.error("Error fetching user:", error)
-			} else {
-				setUser(user)
-			}
-		}
-
-		fetchUser()
-	}, [supabase])
-
-	const getProfile = useCallback(async () => {
-		if (!user) return
-		try {
-			setLoading(true)
-			const { data, error, status } = await supabase
-				.from("profiles")
-				.select(`full_name, username`)
-				.eq("id", user.id)
-				.single()
-
-			if (error && status !== 406) {
-				console.error("Supabase query error:", { error, status })
-				throw error
-			}
-			if (data) {
-				setUsername(data.username)
-			}
-		} catch (err) {
-			console.error("Error loading user data:", err)
-		} finally {
-			setLoading(false)
-		}
-	}, [user, supabase])
-
-	useEffect(() => {
-		getProfile()
-	}, [user, getProfile])
-
-	if (!user) {
-		return <p className="text-center">Loading user...</p>
-	}
+	if (loading) return <p className="text-center">Loading user...</p>
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -131,7 +80,7 @@ export default function AdminDashboard() {
 			<div>
 				<div className="bg-white p-5 rounded shadow col-span-4">Big Box 2</div>
 			</div>
-			<h1>Welcome, {username}</h1>
+			<h1>Welcome, {profile?.username}</h1>
 
 			<form method="POST" action="/signout">
 				<button type="submit" className="px-4 py-2 mt-4 bg-red-500 text-white rounded">

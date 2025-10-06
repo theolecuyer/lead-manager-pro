@@ -12,6 +12,7 @@ import {
 	ChevronDownIcon,
 } from "@heroicons/react/24/solid"
 import { useState, useEffect, useRef } from "react"
+import { clients, ClientData } from "@/data/testData"
 import ClientCardComponent from "@/components/ClientIcon"
 
 export default function AdminDashboard() {
@@ -45,6 +46,21 @@ export default function AdminDashboard() {
 	useEffect(() => {
 		if (!loading && !user) redirect("/login")
 	}, [user, loading])
+
+	const filteredClients = clients
+		.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
+		.sort((a, b) => {
+			switch (sortBy) {
+				case "name":
+					return a.name.localeCompare(b.name)
+				case "leads":
+					return b.leadsToday - a.leadsToday
+				case "credits":
+					return b.credits - a.credits
+				default:
+					return 0
+			}
+		})
 
 	if (loading) return <p className="text-center">Loading user...</p>
 
@@ -108,7 +124,7 @@ export default function AdminDashboard() {
 						>
 							<button
 								onClick={() => setIsOpen(!isOpen)}
-								className="w-full h-10 px-3 text-left bg-white border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between gap-2"
+								className="w-full h-10 px-3 text-left bg-white border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between gap-2 hover:cursor-pointer"
 							>
 								<span className="text-sm text-gray-700 truncate">
 									{sortOptions.find((opt) => opt.value === sortBy)?.label}
@@ -141,32 +157,15 @@ export default function AdminDashboard() {
 					</div>
 					<div className="bg-gray-200 w-[calc(100%+2.5rem)] h-px -mx-5"></div>
 					<div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 mt-5 gap-4">
-						<ClientCardComponent
-							id={1}
-							name="Sarah Johnson"
-							leadsToday={5}
-							credits={2}
-						/>
-						<ClientCardComponent id={2} name="Emily Davis" leadsToday={4} credits={0} />
-						<ClientCardComponent
-							id={3}
-							name="Lisa Thompson"
-							leadsToday={2}
-							credits={3}
-						/>
-						<ClientCardComponent
-							id={4}
-							name="Michael Chen"
-							leadsToday={6}
-							credits={0}
-						/>
-						<ClientCardComponent
-							id={5}
-							name="Christopher Perry"
-							leadsToday={5}
-							credits={1}
-						/>
-						<ClientCardComponent id={6} name="Bob Wallace" leadsToday={2} credits={1} />
+						{filteredClients.map((client: ClientData) => (
+							<ClientCardComponent
+								key={client.id}
+								id={client.id}
+								name={client.name}
+								leadsToday={client.leadsToday}
+								credits={client.credits}
+							/>
+						))}
 					</div>
 				</div>
 			</div>

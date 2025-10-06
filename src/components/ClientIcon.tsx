@@ -21,7 +21,9 @@ export default function ClientCardComponent({ id, name, leadsToday, credits }: C
 	return (
 		<button
 			onClick={handleClientClick}
-			className="bg-white rounded-md p-5 border border-gray-200 w-full text-left grid grid-cols-4 gap-3 hover:shadow-md transition"
+			className="group select-none cursor-pointer bg-white rounded-md p-5 border border-gray-200 w-full text-left grid grid-cols-4 gap-3
+            transform transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg
+            hover:border-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
 		>
 			{/* Name + arrow */}
 			<div className="col-span-4 row-span-1">

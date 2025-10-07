@@ -14,12 +14,15 @@ import {
 import { useState, useEffect, useRef } from "react"
 import { clients, ClientData } from "@/data/testData"
 import ClientCardComponent from "@/components/ClientIcon"
+import Pagination from "@/components/Pagination"
 
 export default function AdminDashboard() {
 	const { user, profile, loading } = useAuth()
 	const [search, setSearch] = useState("")
 	const [sortBy, setSortBy] = useState("name")
 	const [isOpen, setIsOpen] = useState(false)
+	const [currentClientPage, setCurrentClientPage] = useState(1)
+	const [itemsPerClientPage, setItemsPerClientPage] = useState(8)
 	const dropdownRef = useRef<HTMLDivElement>(null)
 
 	const sortOptions = [
@@ -31,6 +34,7 @@ export default function AdminDashboard() {
 	const handleSortChange = (value: string) => {
 		setSortBy(value)
 		setIsOpen(false)
+		setCurrentClientPage(1)
 	}
 
 	useEffect(() => {
@@ -61,6 +65,38 @@ export default function AdminDashboard() {
 					return 0
 			}
 		})
+
+	// Set clients per page size
+	useEffect(() => {
+		const updateItemsPerPage = () => {
+			const width = window.innerWidth
+			let columns = 2 // mobile (1 column)
+
+			if (width >= 1024) {
+				columns = 4 // lg: 4 columns
+			} else if (width >= 768) {
+				columns = 3 // md: 3 columns
+			}
+
+			// 2 rows per page
+			setItemsPerClientPage(columns * 2)
+		}
+
+		updateItemsPerPage()
+		window.addEventListener("resize", updateItemsPerPage)
+		return () => window.removeEventListener("resize", updateItemsPerPage)
+	}, [])
+
+	useEffect(() => {
+		setCurrentClientPage(1)
+	}, [search])
+
+	const totalClientPages = Math.ceil(filteredClients.length / itemsPerClientPage)
+	const startClientIndex = (currentClientPage - 1) * itemsPerClientPage
+	const paginatedClients = filteredClients.slice(
+		startClientIndex,
+		startClientIndex + itemsPerClientPage
+	)
 
 	if (loading) return <p className="text-center">Loading user...</p>
 
@@ -156,8 +192,8 @@ export default function AdminDashboard() {
 						</div>
 					</div>
 					<div className="bg-gray-200 w-[calc(100%+2.5rem)] h-px -mx-5"></div>
-					<div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 mt-5 gap-4">
-						{filteredClients.map((client: ClientData) => (
+					<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-5 gap-4">
+						{paginatedClients.map((client: ClientData) => (
 							<ClientCardComponent
 								key={client.id}
 								id={client.id}
@@ -167,6 +203,15 @@ export default function AdminDashboard() {
 							/>
 						))}
 					</div>
+					<div className="bg-gray-200 w-[calc(100%+2.5rem)] h-px -mx-5 my-5"></div>
+					<Pagination
+						name="clients"
+						currentPage={currentClientPage}
+						totalPages={totalClientPages}
+						itemsPerPage={itemsPerClientPage}
+						totalItems={filteredClients.length}
+						onPageChange={setCurrentClientPage}
+					/>
 				</div>
 			</div>
 			<div>

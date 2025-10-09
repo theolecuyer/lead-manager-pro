@@ -1,6 +1,5 @@
 "use client"
 
-import AdminLayoutUI from "./AdminLayoutUI"
 import { AuthProvider } from "@/providers/AuthProvider"
 import type { User } from "@supabase/supabase-js"
 
@@ -15,7 +14,7 @@ export default function AdminLayoutClient({
 }) {
 	return (
 		<AuthProvider initialUser={initialUser} initialProfile={initialProfile}>
-			<AdminLayoutUI>{children}</AdminLayoutUI>
+			{children}
 		</AuthProvider>
 	)
 }

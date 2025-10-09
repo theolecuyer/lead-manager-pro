@@ -12,10 +12,13 @@ import {
 	ChevronDownIcon,
 } from "@heroicons/react/24/solid"
 import { useState, useEffect, useRef } from "react"
-import { clients, ClientData } from "@/data/testData"
 import ClientCardComponent from "@/components/ClientIcon"
 import Pagination from "@/components/Pagination"
 import AdminHeader from "@/components/AdminHeader"
+import { getAllClients } from "@/lib/supabase/clients"
+import { Database } from "@/lib/supabase/database.types"
+
+export type Client = Database["public"]["Tables"]["clients"]["Row"]
 
 export default function AdminDashboard() {
 	const { user, profile, loading } = useAuth()
@@ -24,6 +27,8 @@ export default function AdminDashboard() {
 	const [isOpen, setIsOpen] = useState(false)
 	const [currentClientPage, setCurrentClientPage] = useState(1)
 	const [itemsPerClientPage, setItemsPerClientPage] = useState(8)
+	const [clients, setClients] = useState<Client[]>([])
+	const [isLoadingClients, setIsLoadingClients] = useState(true)
 	const dropdownRef = useRef<HTMLDivElement>(null)
 
 	const sortOptions = [
@@ -37,6 +42,25 @@ export default function AdminDashboard() {
 		setIsOpen(false)
 		setCurrentClientPage(1)
 	}
+
+	// Fetch clients from Supabase
+	useEffect(() => {
+		async function fetchClients() {
+			try {
+				setIsLoadingClients(true)
+				const data = await getAllClients()
+				setClients(data)
+			} catch (error) {
+				console.error("Error fetching clients:", error)
+			} finally {
+				setIsLoadingClients(false)
+			}
+		}
+
+		if (user) {
+			fetchClients()
+		}
+	}, [user])
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -53,15 +77,15 @@ export default function AdminDashboard() {
 	}, [user, loading])
 
 	const filteredClients = clients
-		.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
+		.filter((c) => c.name?.toLowerCase().includes(search.toLowerCase()))
 		.sort((a, b) => {
 			switch (sortBy) {
 				case "name":
-					return a.name.localeCompare(b.name)
+					return (a.name || "").localeCompare(b.name || "")
 				case "leads":
-					return b.leadsToday - a.leadsToday
+					return b.leads_received_today - a.leads_received_today
 				case "credits":
-					return b.credits - a.credits
+					return b.credit_balance - a.credit_balance
 				default:
 					return 0
 			}
@@ -99,13 +123,12 @@ export default function AdminDashboard() {
 		startClientIndex + itemsPerClientPage
 	)
 
-	// Data points to use
-	const totalClients = clients.length
-	const leadsToday = clients.reduce((sum, client) => sum + client.leadsToday, 0)
-	const creditsToday = clients.reduce((sum, client) => sum + client.creditsToday, 0)
-	const billedToday = clients.reduce((sum, client) => sum + client.billedToday, 0)
+	const totalClients = clients.filter((c) => c.active).length
+	const leadsToday = clients.reduce((sum, client) => sum + client.leads_received_today, 0)
+	const creditsToday = clients.reduce((sum, client) => sum + client.credits_issued_today, 0)
+	const billedToday = clients.reduce((sum, client) => sum + client.leads_paid_today, 0)
 
-	if (loading) return <p className="text-center">Loading user...</p>
+	if (loading || isLoadingClients) return <p className="text-center">Loading...</p>
 
 	return (
 		<AdminHeader header={<h1 className="text-xl font-semibold">Dashboard Overview</h1>}>
@@ -201,13 +224,13 @@ export default function AdminDashboard() {
 						</div>
 						<div className="bg-gray-200 w-[calc(100%+2.5rem)] h-px -mx-5"></div>
 						<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-5 gap-4">
-							{paginatedClients.map((client: ClientData) => (
+							{paginatedClients.map((client) => (
 								<ClientCardComponent
 									key={client.id}
 									id={client.id}
-									name={client.name}
-									leadsToday={client.leadsToday}
-									billedToday={client.billedToday}
+									name={client.name || "Unknown"}
+									leadsToday={client.leads_received_today}
+									billedToday={client.leads_paid_today}
 								/>
 							))}
 						</div>

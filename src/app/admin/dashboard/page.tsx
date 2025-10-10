@@ -17,8 +17,11 @@ import Pagination from "@/components/Pagination"
 import AdminHeader from "@/components/AdminHeader"
 import { getAllClients } from "@/lib/supabase/clients"
 import { Database } from "@/lib/supabase/database.types"
+import { getTodaysLeads } from "@/lib/supabase/leads"
+import LeadTableRow from "@/components/LeadTableRow"
 
 export type Client = Database["public"]["Tables"]["clients"]["Row"]
+export type Lead = Database["public"]["Tables"]["leads"]["Row"]
 
 export default function AdminDashboard() {
 	const { user, profile, loading } = useAuth()
@@ -30,6 +33,7 @@ export default function AdminDashboard() {
 	const [clients, setClients] = useState<Client[]>([])
 	const [isLoadingClients, setIsLoadingClients] = useState(true)
 	const dropdownRef = useRef<HTMLDivElement>(null)
+	const [todaysLeads, setTodaysLeads] = useState<any[]>([])
 
 	const sortOptions = [
 		{ value: "name", label: "Sort by Name" },
@@ -43,22 +47,29 @@ export default function AdminDashboard() {
 		setCurrentClientPage(1)
 	}
 
-	// Fetch clients from Supabase
+	// Fetch Dashboard from Supabase (Clients, Leads)
 	useEffect(() => {
-		async function fetchClients() {
+		async function fetchData() {
 			try {
 				setIsLoadingClients(true)
-				const data = await getAllClients()
-				setClients(data)
+
+				// fetch both in parallel
+				const [clientData, leadData] = await Promise.all([
+					getAllClients(),
+					getTodaysLeads(),
+				])
+
+				setClients(clientData)
+				setTodaysLeads(leadData)
 			} catch (error) {
-				console.error("Error fetching clients:", error)
+				console.error("Error fetching dashboard data:", error)
 			} finally {
 				setIsLoadingClients(false)
 			}
 		}
 
 		if (user) {
-			fetchClients()
+			fetchData()
 		}
 	}, [user])
 
@@ -246,7 +257,45 @@ export default function AdminDashboard() {
 					</div>
 				</div>
 				<div>
-					<div className="bg-white p-5 rounded shadow col-span-4">Big Box 2</div>
+					<div className="bg-white p-5 rounded shadow col-span-4">
+						<h1 className="font-bold font-sans">Today's Leads</h1>
+						<p className="text-xs font-sans mt-0.5">
+							All leads recieved today across all clients
+						</p>
+
+						<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
+							<p className="text-small font-sans font-medium text-gray-600">CLIENT</p>
+							<p className="text-small font-sans font-medium text-gray-600">
+								LEAD NAME
+							</p>
+							<p className="text-small font-sans font-medium text-gray-600">PHONE</p>
+							<p className="text-small font-sans font-medium text-gray-600">TIME</p>
+							<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
+							<p className="flex justify-end text-small font-sans font-medium text-gray-600">
+								ACTIONS
+							</p>
+						</div>
+
+						<div className="flex flex-col -mx-5">
+							{todaysLeads.length > 0 ? (
+								todaysLeads.map((lead) => (
+									<LeadTableRow
+										key={lead.id}
+										id={lead.id}
+										clientName={lead.client_name || "Unknown"}
+										leadName={lead.lead_name}
+										phone={lead.lead_phone}
+										createdAt={lead.created_at}
+										status={lead.payment_status}
+									/>
+								))
+							) : (
+								<p className="text-center text-sm text-gray-500 py-4">
+									No leads received today.
+								</p>
+							)}
+						</div>
+					</div>
 				</div>
 			</div>
 		</AdminHeader>

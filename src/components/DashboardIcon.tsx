@@ -30,7 +30,7 @@ export default function DashboardIcon(dashboardIconProps: DashboardIconProps) {
 	const diffObject = calculateDiff(dashboardIconProps.numToday, dashboardIconProps.numYesterday)
 
 	return (
-		<div className="bg-white p-5 rounded shadow grid grid-cols-4 ">
+		<div className="bg-white p-5 rounded-md shadow grid grid-cols-4 ">
 			<div className="col-span-3">
 				<p className="text-xs sm:text-sm font-light font-sans whitespace-nowrap">
 					{dashboardIconProps.title}

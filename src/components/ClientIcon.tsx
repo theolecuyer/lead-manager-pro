@@ -84,7 +84,6 @@ export default function ClientCardComponent({
 					</div>
 				</div>
 			</div>
-
 			{/* Divider */}
 			<div className="col-span-4">
 				<div className="bg-gray-200 w-full h-px mt-2"></div>

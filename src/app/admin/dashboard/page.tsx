@@ -30,6 +30,8 @@ export default function AdminDashboard() {
 	const [isOpen, setIsOpen] = useState(false)
 	const [currentClientPage, setCurrentClientPage] = useState(1)
 	const [itemsPerClientPage, setItemsPerClientPage] = useState(8)
+	const [currentLeadPage, setCurrentLeadPage] = useState(1)
+	const [itemsPerLeadPage, setItemsPerLeadPage] = useState(10)
 	const [clients, setClients] = useState<Client[]>([])
 	const [isLoadingClients, setIsLoadingClients] = useState(true)
 	const dropdownRef = useRef<HTMLDivElement>(null)
@@ -47,18 +49,25 @@ export default function AdminDashboard() {
 		setCurrentClientPage(1)
 	}
 
+	async function onLeadUpdated() {
+		try {
+			const [clientData, leadData] = await Promise.all([getAllClients(), getTodaysLeads()])
+			setClients(clientData)
+			setTodaysLeads(leadData)
+		} catch (error) {
+			console.error("Error fetching leads:", error)
+		}
+	}
+
 	// Fetch Dashboard from Supabase (Clients, Leads)
 	useEffect(() => {
 		async function fetchData() {
 			try {
 				setIsLoadingClients(true)
-
-				// fetch both in parallel
 				const [clientData, leadData] = await Promise.all([
 					getAllClients(),
 					getTodaysLeads(),
 				])
-
 				setClients(clientData)
 				setTodaysLeads(leadData)
 			} catch (error) {
@@ -68,9 +77,7 @@ export default function AdminDashboard() {
 			}
 		}
 
-		if (user) {
-			fetchData()
-		}
+		if (user) fetchData()
 	}, [user])
 
 	useEffect(() => {
@@ -133,6 +140,9 @@ export default function AdminDashboard() {
 		startClientIndex,
 		startClientIndex + itemsPerClientPage
 	)
+	const totalLeadPages = Math.ceil(todaysLeads.length / itemsPerLeadPage)
+	const startLeadIndex = (currentLeadPage - 1) * itemsPerLeadPage
+	const paginatedLeads = todaysLeads.slice(startLeadIndex, startLeadIndex + itemsPerLeadPage)
 
 	const totalClients = clients.filter((c) => c.active).length
 	const leadsToday = clients.reduce((sum, client) => sum + client.leads_received_today, 0)
@@ -183,7 +193,7 @@ export default function AdminDashboard() {
 					/>
 				</div>
 				<div>
-					<div className="bg-white p-5 rounded shadow col-span-4">
+					<div className="bg-white p-5 rounded-md shadow col-span-4">
 						<h1 className="font-bold font-sans">Client Overview</h1>
 						<div className="flex items-center gap-3 my-5">
 							<div className="relative flex-1 max-w-md">
@@ -256,45 +266,55 @@ export default function AdminDashboard() {
 						/>
 					</div>
 				</div>
-				<div>
-					<div className="bg-white p-5 rounded shadow col-span-4">
-						<h1 className="font-bold font-sans">Today's Leads</h1>
-						<p className="text-xs font-sans mt-0.5">
-							All leads recieved today across all clients
+				<div className="bg-white p-5 rounded-md shadow col-span-4">
+					<h1 className="font-bold font-sans">Today's Leads</h1>
+					<p className="text-xs font-sans mt-0.5">
+						All leads recieved today across all clients
+					</p>
+
+					<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
+						<p className="text-small font-sans font-medium text-gray-600 ml-2">
+							CLIENT
 						</p>
+						<p className="text-small font-sans font-medium text-gray-600">LEAD NAME</p>
+						<p className="text-small font-sans font-medium text-gray-600">PHONE</p>
+						<p className="text-small font-sans font-medium text-gray-600">TIME</p>
+						<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
+						<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
+							ACTIONS
+						</p>
+					</div>
 
-						<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
-							<p className="text-small font-sans font-medium text-gray-600">CLIENT</p>
-							<p className="text-small font-sans font-medium text-gray-600">
-								LEAD NAME
+					<div className="flex flex-col -mx-5">
+						{paginatedLeads.length > 0 ? (
+							paginatedLeads.map((lead) => (
+								<LeadTableRow
+									key={lead.id}
+									id={lead.id}
+									clientId={lead.client?.id}
+									clientName={lead.client?.name || "Unknown"}
+									leadName={lead.lead_name}
+									phone={lead.lead_phone}
+									createdAt={lead.created_at}
+									status={lead.payment_status}
+									onLeadUpdated={onLeadUpdated}
+								/>
+							))
+						) : (
+							<p className="text-center text-sm text-gray-500 pt-5">
+								No leads received today.
 							</p>
-							<p className="text-small font-sans font-medium text-gray-600">PHONE</p>
-							<p className="text-small font-sans font-medium text-gray-600">TIME</p>
-							<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
-							<p className="flex justify-end text-small font-sans font-medium text-gray-600">
-								ACTIONS
-							</p>
-						</div>
-
-						<div className="flex flex-col -mx-5">
-							{todaysLeads.length > 0 ? (
-								todaysLeads.map((lead) => (
-									<LeadTableRow
-										key={lead.id}
-										id={lead.id}
-										clientName={lead.client_name || "Unknown"}
-										leadName={lead.lead_name}
-										phone={lead.lead_phone}
-										createdAt={lead.created_at}
-										status={lead.payment_status}
-									/>
-								))
-							) : (
-								<p className="text-center text-sm text-gray-500 py-4">
-									No leads received today.
-								</p>
-							)}
-						</div>
+						)}
+					</div>
+					<div className="rounded-b-md border-t border-gray-200 bg-gray-50 p-3 px-5 -mx-5 -my-5 mt-auto">
+						<Pagination
+							name="leads"
+							currentPage={currentLeadPage}
+							totalPages={totalLeadPages}
+							itemsPerPage={itemsPerLeadPage}
+							totalItems={todaysLeads.length}
+							onPageChange={setCurrentLeadPage}
+						/>
 					</div>
 				</div>
 			</div>

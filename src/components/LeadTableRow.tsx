@@ -102,9 +102,7 @@ export default function LeadTableRow({
 				</button>
 				{status == "credited" ? (
 					<div>
-						<h1 onClick={handleCredit} className="text-small text-gray-400 font-medium">
-							Credited
-						</h1>
+						<h1 className="text-small text-gray-400 font-medium">Credited</h1>
 					</div>
 				) : (
 					<button

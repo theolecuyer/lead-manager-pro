@@ -103,7 +103,7 @@ export default function Pagination({
 					disableRipple
 					variant="bordered"
 					size="sm"
-					isDisabled={currentPage === totalPages}
+					isDisabled={currentPage === totalPages || totalItems == 0}
 					onPress={() => onPageChange(currentPage + 1)}
 					className="text-gray-700 text-small border border-gray-300 rounded-lg px-3"
 				>

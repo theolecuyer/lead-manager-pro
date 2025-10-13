@@ -5,8 +5,13 @@ import { ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useEffect, useRef, useState } from "react"
 import type { Client } from "../dashboard/page"
 import { getAllClients } from "@/lib/supabase/clients"
+import ClientTableRow from "@/components/ClientTableRow"
+import Pagination from "@/components/Pagination"
+import { useAuth } from "@/providers/AuthProvider"
+import { redirect } from "next/navigation"
 
 export default function AdminClients() {
+	const { user, profile, loading } = useAuth()
 	const [search, setSearch] = useState("")
 	const [sortBy, setSortBy] = useState("name")
 	const [isSortOpen, setIsSortOpen] = useState(false)
@@ -14,6 +19,7 @@ export default function AdminClients() {
 	const [isStatusOpen, setIsStatusOpen] = useState(false)
 	const [currentClientPage, setCurrentClientPage] = useState(1)
 	const [isLoadingClients, setIsLoadingClients] = useState(true)
+	const [itemsPerClientPage, setItemsPerClientPage] = useState(10)
 	const [clients, setClients] = useState<Client[]>([])
 
 	const sortOptions = [
@@ -46,6 +52,10 @@ export default function AdminClients() {
 	}
 
 	useEffect(() => {
+		if (!loading && !user) redirect("/login")
+	}, [user, loading])
+
+	useEffect(() => {
 		async function fetchClients() {
 			setIsLoadingClients(true)
 			try {
@@ -58,6 +68,28 @@ export default function AdminClients() {
 
 		fetchClients()
 	}, [])
+
+	const filteredClients = clients
+		.filter((c) => c.name?.toLowerCase().includes(search.toLowerCase()))
+		.sort((a, b) => {
+			switch (sortBy) {
+				case "name":
+					return (a.name || "").localeCompare(b.name || "")
+				case "leads":
+					return b.leads_received_today - a.leads_received_today
+				case "credits":
+					return b.credit_balance - a.credit_balance
+				default:
+					return 0
+			}
+		})
+
+	const totalClientPages = Math.ceil(filteredClients.length / itemsPerClientPage)
+	const startClientIndex = (currentClientPage - 1) * itemsPerClientPage
+	const paginatedClients = filteredClients.slice(
+		startClientIndex,
+		startClientIndex + itemsPerClientPage
+	)
 
 	return (
 		<AdminHeader
@@ -160,6 +192,37 @@ export default function AdminClients() {
 					<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
 						ACTIONS
 					</p>
+				</div>
+				<div className="flex flex-col -mx-5">
+					{paginatedClients.length > 0 ? (
+						paginatedClients.map((client) => (
+							<ClientTableRow
+								key={client.id}
+								id={client.id}
+								clientName={client.name || "Unknown"}
+								phone={client?.phone || "Unknown"}
+								email={client.email || "Unknown"}
+								status={client?.active || undefined}
+								totalLeads={client.leads_received_today}
+								today={client.leads_received_today}
+								credits={client.credit_balance}
+							/>
+						))
+					) : (
+						<p className="text-center text-sm text-gray-500 p-5">
+							No leads received today.
+						</p>
+					)}
+				</div>
+				<div className="rounded-b-md border-t border-gray-200 bg-gray-50 p-3 px-5 -mx-5 -my-5 mt-auto">
+					<Pagination
+						name="clients"
+						currentPage={currentClientPage}
+						totalPages={totalClientPages}
+						itemsPerPage={itemsPerClientPage}
+						totalItems={paginatedClients.length}
+						onPageChange={setCurrentClientPage}
+					/>
 				</div>
 			</div>
 		</AdminHeader>

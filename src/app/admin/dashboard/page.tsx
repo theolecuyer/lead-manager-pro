@@ -301,7 +301,7 @@ export default function AdminDashboard() {
 								/>
 							))
 						) : (
-							<p className="text-center text-sm text-gray-500 pt-5">
+							<p className="text-center text-sm text-gray-500 p-5">
 								No leads received today.
 							</p>
 						)}

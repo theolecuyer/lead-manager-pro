@@ -62,10 +62,12 @@ export default function LeadTableRow({
 				bg = "bg-green-100"
 				text = "text-green-500"
 				statusText = "Paid"
+				break
 			case "billable":
 				bg = "bg-blue-100"
 				text = "text-blue-700"
 				statusText = "Billable"
+				break
 		}
 		return (
 			<div>

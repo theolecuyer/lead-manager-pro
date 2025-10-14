@@ -17,9 +17,10 @@ import { useAuth } from "@/providers/AuthProvider"
 interface AdminLayoutUIProps {
 	children: React.ReactNode
 	header?: React.ReactNode
+	rightAction?: React.ReactNode
 }
 
-export default function AdminHeader({ children, header }: AdminLayoutUIProps) {
+export default function AdminHeader({ children, header, rightAction }: AdminLayoutUIProps) {
 	const pathname = usePathname()
 	const { user, profile, loading } = useAuth()
 
@@ -38,11 +39,10 @@ export default function AdminHeader({ children, header }: AdminLayoutUIProps) {
 
 	return (
 		<div className="flex min-h-screen">
-			{/* Desktop Sidebar */}
 			<aside className="hidden md:block w-52 p-4 border-r border-gray-200 shadow-md">
 				<h2 className="text-lg font-bold pb-0.5 mt-2">Lead Manager Pro</h2>
 				<h2 className="text-sm font-medium text-gray-500 mb-5">Admin Dashboard</h2>
-				<div className="-mx-4 h-px bg-gray-200"></div>
+				<div className="-mx-4 h-px bg-gray-200" />
 				<nav className="flex flex-col gap-2 mt-5">
 					{navItems.map(({ href, label, icon: Icon }) => {
 						const active = pathname === href || pathname.startsWith(href + "/")
@@ -64,34 +64,12 @@ export default function AdminHeader({ children, header }: AdminLayoutUIProps) {
 				</nav>
 			</aside>
 
-			{/* Mobile Sidebar (icons only) */}
-			<nav className="flex md:hidden flex-col gap-2 p-2 border-r border-gray-200 shadow-md">
-				{navItems.map(({ href, icon: Icon }) => {
-					const active = pathname === href || pathname.startsWith(href + "/")
-					return (
-						<Link
-							key={href}
-							href={href}
-							className={`flex justify-center items-center rounded-md p-2 transition-colors ${
-								active
-									? "bg-blue-500 text-white"
-									: "text-gray-700 hover:bg-gray-100"
-							}`}
-						>
-							<Icon className="h-5 w-5" />
-						</Link>
-					)
-				})}
-			</nav>
-
-			{/* Main Content */}
 			<div className="flex-1 flex flex-col">
-				{/* Top Bar */}
 				<header className="flex items-center justify-between bg-white p-4 shadow-sm border-b border-gray-200">
 					<div className="flex-1">{header}</div>
-
-					{/* User Dropdown */}
 					<div className="flex items-center gap-4">
+						{rightAction && <div className="flex items-center">{rightAction}</div>}
+
 						<Dropdown placement="bottom-end">
 							<DropdownTrigger>
 								<Button
@@ -106,7 +84,6 @@ export default function AdminHeader({ children, header }: AdminLayoutUIProps) {
 									<ChevronDownIcon className="w-4 h-4 text-gray-500" />
 								</Button>
 							</DropdownTrigger>
-
 							<DropdownMenu
 								aria-label="User Menu"
 								className="bg-white shadow-lg rounded-md p-2 min-w-[160px]"
@@ -143,7 +120,6 @@ export default function AdminHeader({ children, header }: AdminLayoutUIProps) {
 					</div>
 				</header>
 
-				{/* Page content */}
 				<main className="flex-1 p-6 bg-gray-100">{children}</main>
 			</div>
 		</div>

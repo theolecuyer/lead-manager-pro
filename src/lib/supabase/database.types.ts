@@ -27,6 +27,7 @@ export type Database = {
           leads_received_today: number
           name: string | null
           phone: string | null
+          total_leads_count: number
           updated_at: string | null
         }
         Insert: {
@@ -41,6 +42,7 @@ export type Database = {
           leads_received_today?: number
           name?: string | null
           phone?: string | null
+          total_leads_count?: number
           updated_at?: string | null
         }
         Update: {
@@ -55,6 +57,7 @@ export type Database = {
           leads_received_today?: number
           name?: string | null
           phone?: string | null
+          total_leads_count?: number
           updated_at?: string | null
         }
         Relationships: []
@@ -193,15 +196,22 @@ export type Database = {
         Args: { client_name_input: string }
         Returns: number
       }
+      issue_credit_to_lead: {
+        Args: {
+          p_adjusted_by?: string
+          p_credit_amount: number
+          p_lead_id: number
+          p_reason?: string
+        }
+        Returns: undefined
+      }
       issue_credits_to_client: {
-        Args:
-          | {
-              p_adjusted_by?: string
-              p_client_id: number
-              p_credit_amount: number
-              p_reason?: string
-            }
-          | { p_client_id: number; p_credit_amount: number; p_reason?: string }
+        Args: {
+          p_adjusted_by?: string
+          p_client_id: number
+          p_credit_amount: number
+          p_reason?: string
+        }
         Returns: undefined
       }
       reset_daily_lead_counters: {

@@ -1,14 +1,14 @@
 "use client"
 
 import AdminHeader from "@/components/AdminHeader"
-import { ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid"
+import { ChevronDownIcon, MagnifyingGlassIcon, ChevronRightIcon } from "@heroicons/react/24/solid"
 import { useEffect, useRef, useState } from "react"
 import type { Client } from "../dashboard/page"
 import { getAllClients } from "@/lib/supabase/clients"
 import ClientTableRow from "@/components/ClientTableRow"
 import Pagination from "@/components/Pagination"
 import { useAuth } from "@/providers/AuthProvider"
-import { redirect } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
 
 export default function AdminClients() {
 	const { user, profile, loading } = useAuth()
@@ -21,6 +21,7 @@ export default function AdminClients() {
 	const [isLoadingClients, setIsLoadingClients] = useState(true)
 	const [itemsPerClientPage, setItemsPerClientPage] = useState(10)
 	const [clients, setClients] = useState<Client[]>([])
+	const router = useRouter()
 
 	const sortOptions = [
 		{ value: "name", label: "Sort by Name (A-Z)" },
@@ -94,15 +95,35 @@ export default function AdminClients() {
 	return (
 		<AdminHeader
 			header={
-				<div className="flex justify-between items-center">
-					<h1 className="text-xl font-bold">Clients</h1>
-					<button
-						onClick={handleAddClient}
-						className="px-3 py-1 mr-2 rounded-md bg-blue-500 text-white hover:cursor-pointer"
-					>
-						Add New Client +
-					</button>
+				<div className="flex flex-col justify-center gap-1 h-full">
+					<div className="flex items-center text-sm">
+						<button
+							onClick={() => router.push(`/admin/dashboard`)}
+							className="hover:cursor-pointer text-slate-600"
+						>
+							Dashboard
+						</button>
+						<ChevronRightIcon className="h-4 w-4 mx-1 text-slate-600" />
+						<button
+							onClick={() => router.push(`/admin/clients`)}
+							className="hover:cursor-pointer font-medium text-gray-900"
+						>
+							Clients
+						</button>
+					</div>
+					<h1 className="text-xl font-bold text-gray-900 leading-none mt-2">Clients</h1>
+					<h1 className="text-sm text-gray-700">
+						{clients.length} Total Client{clients.length !== 1 && "s"}
+					</h1>
 				</div>
+			}
+			rightAction={
+				<button
+					onClick={handleAddClient}
+					className="flex items-center justify-center px-3 py-1.5 rounded-md bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+				>
+					Add New Client +
+				</button>
 			}
 		>
 			<div className="bg-white p-5 rounded-md shadow">
@@ -188,10 +209,8 @@ export default function AdminClients() {
 					<p className="text-small font-sans font-medium text-gray-600">CONTACT</p>
 					<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
 					<p className="text-small font-sans font-medium text-gray-600">TOTAL LEADS</p>
-					<p className="text-small font-sans font-medium text-gray-600">THIS MONTH</p>
-					<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
-						ACTIONS
-					</p>
+					<p className="text-small font-sans font-medium text-gray-600">TODAY</p>
+					<p className="text-small font-sans font-medium text-gray-600">CREDITS</p>
 				</div>
 				<div className="flex flex-col -mx-5">
 					{paginatedClients.length > 0 ? (
@@ -203,15 +222,13 @@ export default function AdminClients() {
 								phone={client?.phone || "Unknown"}
 								email={client.email || "Unknown"}
 								status={client?.active || undefined}
-								totalLeads={client.leads_received_today}
+								totalLeads={client.total_leads_count}
 								today={client.leads_received_today}
 								credits={client.credit_balance}
 							/>
 						))
 					) : (
-						<p className="text-center text-sm text-gray-500 p-5">
-							No leads received today.
-						</p>
+						<p className="text-center text-sm text-gray-500 p-5">No clients found.</p>
 					)}
 				</div>
 				<div className="rounded-b-md border-t border-gray-200 bg-gray-50 p-3 px-5 -mx-5 -my-5 mt-auto">

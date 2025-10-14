@@ -29,23 +29,31 @@ export default function ClientTableRow({
 		router.push(`/admin/clients/${id}`)
 	}
 
+	let creditColor
+	if (credits != undefined) {
+		creditColor = credits > 0 ? "text-red-500" : "text-gray-700"
+	} else {
+		credits = 0
+		creditColor = "text-gray-700"
+	}
+
 	const handleView = () => {
 		console.log("view")
 	}
 
 	const statusObject = () => {
-		let bg = "bg-red-100"
-		let text = "text-red-500"
-		let statusText = "Credited"
+		let bg, text, statusText
 		switch (status) {
 			case true:
 				bg = "bg-green-100"
 				text = "text-green-500"
-				statusText = "Paid"
+				statusText = "Active"
+				break
 			case false:
-				bg = "bg-blue-100"
-				text = "text-blue-700"
-				statusText = "Billable"
+				bg = "bg-red-100"
+				text = "text-red-700"
+				statusText = "Inactive"
+				break
 		}
 		return (
 			<div>
@@ -57,22 +65,24 @@ export default function ClientTableRow({
 	}
 
 	return (
-		<div className="grid grid-cols-6 border-y border-gray-100 grid-rows-1 p-3 px-5 items-center">
-			<button
-				onClick={handleClientClick}
-				className="ml-2 flex justify-start text-small text-blue-500 font-sans font-semibold hover:cursor-pointer"
-			>
+		<div
+			onClick={handleClientClick}
+			className="grid grid-cols-6 border-y border-gray-100 grid-rows-1 p-3 px-5 items-center hover:bg-gray-100 hover:cursor-pointer transition-colors"
+		>
+			<p className="ml-2 flex justify-start text-medium font-sans font-semibold">
 				{clientName}
-			</button>
-			<p className="text-small font-sans font-medium text-gray-700"> {clientName}</p>
-			<p className="text-small font-sans font-medium text-gray-700">{phone}</p>
-			<p className="text-small font-sans font-medium text-gray-600">{status}</p>
+			</p>
+			<p className="text-small font-sans font-medium text-gray-700"> {phone}</p>
 			{statusObject()}
-			<div className="flex gap-10 justify-end mr-2">
-				<button className="text-small text-blue-500 font-medium hover:cursor-pointer">
-					View
-				</button>
+			<div>
+				<p className="text-medium font-sans font-semibold">{totalLeads}</p>
+				<p className="text-xs">all time</p>
 			</div>
+			<div>
+				<p className="text-medium font-sans font-semibold">{today}</p>
+				<p className="text-xs">today</p>
+			</div>
+			<p className={`text-medium font-sans font-semibold ${creditColor}`}>{credits}</p>
 		</div>
 	)
 }

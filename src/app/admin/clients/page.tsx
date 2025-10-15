@@ -9,6 +9,7 @@ import ClientTableRow from "@/components/ClientTableRow"
 import Pagination from "@/components/Pagination"
 import { useAuth } from "@/providers/AuthProvider"
 import { redirect, useRouter } from "next/navigation"
+import BreadcrumbHeader from "@/components/BreadcrumbHeader"
 
 export default function AdminClients() {
 	const { user, profile, loading } = useAuth()
@@ -96,21 +97,12 @@ export default function AdminClients() {
 		<AdminHeader
 			header={
 				<div className="flex flex-col justify-center gap-1 h-full">
-					<div className="flex items-center text-sm">
-						<button
-							onClick={() => router.push(`/admin/dashboard`)}
-							className="hover:cursor-pointer text-slate-600"
-						>
-							Dashboard
-						</button>
-						<ChevronRightIcon className="h-4 w-4 mx-1 text-slate-600" />
-						<button
-							onClick={() => router.push(`/admin/clients`)}
-							className="hover:cursor-pointer font-medium text-gray-900"
-						>
-							Clients
-						</button>
-					</div>
+					<BreadcrumbHeader
+						crumbs={[
+							{ content: "Dashboard", href: "/admin/dashboard" },
+							{ content: "Clients", href: "/admin/clients" },
+						]}
+					/>
 					<h1 className="text-xl font-bold text-gray-900 leading-none mt-2">Clients</h1>
 					<h1 className="text-sm text-gray-700">
 						{clients.length} Total Client{clients.length !== 1 && "s"}

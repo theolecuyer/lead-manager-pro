@@ -2,11 +2,14 @@ import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/solid"
 
 export type DashboardIconProps = {
 	icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+	stats: boolean
+	statsText: string
 	textcolor: string
 	color1: string
 	color2: string
 	numToday: number
-	numYesterday: number
+	comparison: number
+	comparisonTime: string
 	title: string
 }
 
@@ -27,7 +30,7 @@ const calculateDiff = (numToday: number, numYesterday: number): Difference => {
 }
 
 export default function DashboardIcon(dashboardIconProps: DashboardIconProps) {
-	const diffObject = calculateDiff(dashboardIconProps.numToday, dashboardIconProps.numYesterday)
+	const diffObject = calculateDiff(dashboardIconProps.numToday, dashboardIconProps.comparison)
 
 	return (
 		<div className="bg-white p-5 rounded-md shadow grid grid-cols-4 ">
@@ -40,21 +43,28 @@ export default function DashboardIcon(dashboardIconProps: DashboardIconProps) {
 				>
 					{dashboardIconProps.numToday}
 				</p>
-				<div className="hidden [@media(min-width:480px)]:block mt-2 items-center">
-					<diffObject.icon className={`h-5 w-5 ${diffObject.color}`} />
-					<span className={`pl-0.5 text-xs ${diffObject.color} font-sans`}>
-						{diffObject.sign}
-						{Math.abs(diffObject.percentage).toFixed(1)}%
-					</span>
-					<span className="font-sans text-xs pl-1 whitespace-nowrap">vs yesterday</span>
-				</div>
+				{dashboardIconProps.stats ? (
+					<div className="hidden [@media(min-width:480px)]:block mt-1 items-center">
+						<span className={`pl-0.5 text-xs ${diffObject.color} font-sans`}>
+							{diffObject.sign}
+							{Math.abs(diffObject.percentage).toFixed(1)}%{" "}
+							{dashboardIconProps.comparisonTime}
+						</span>
+					</div>
+				) : (
+					<div className="hidden [@media(min-width:480px)]:block mt-1 items-center">
+						<span className="font-sans text-xs text-gray-500 whitespace-nowrap">
+							{dashboardIconProps.statsText}
+						</span>
+					</div>
+				)}
 			</div>
 			<div className="flex items-center justify-center lg:pr-1 xl:pr-2">
 				<div
-					className={`${dashboardIconProps.color1} px-3 py-5 sm:px-4 sm:py-6 lg:px-1.5 lg:py-3.5 xl:px-4 xl:py-6 rounded-lg`}
+					className={`${dashboardIconProps.color1} px-3 py-5 sm:px-4 sm:py-6 lg:px-3 lg:py-3 xl:px-4 xl:py-6 rounded-lg`}
 				>
 					<dashboardIconProps.icon
-						className={`h-8 w-8 xl:h-10 xl:w-10 ${dashboardIconProps.color2}`}
+						className={`h-6 w-6 xl:h-8 xl:w-8 ${dashboardIconProps.color2}`}
 					/>
 				</div>
 			</div>

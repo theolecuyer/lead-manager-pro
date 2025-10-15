@@ -106,11 +106,16 @@ export default function AdminHeader({ children, header, rightAction }: AdminLayo
 								<DropdownItem key="settings">Settings</DropdownItem>
 								<DropdownItem
 									key="logout"
-									className="text-danger font-medium"
-									color="danger"
+									className="text-red-600 font-medium hover:!bg-red-50 data-[hover=true]:!bg-red-50 cursor-pointer"
+									classNames={{
+										base: "hover:!bg-red-50 data-[hover=true]:!bg-red-50 cursor-pointer",
+									}}
 								>
 									<form method="POST" action="/signout" className="w-full">
-										<button type="submit" className="w-full text-left">
+										<button
+											type="submit"
+											className="w-full text-left text-red-600 cursor-pointer"
+										>
 											Log Out
 										</button>
 									</form>

@@ -157,38 +157,50 @@ export default function AdminDashboard() {
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<DashboardIcon
 						icon={ArrowUpTrayIcon}
+						stats={true}
+						statsText=""
 						textcolor="text-black"
 						color1="bg-blue-100"
 						color2="text-blue-500"
 						numToday={leadsToday}
-						numYesterday={8}
+						comparison={8}
+						comparisonTime="from yesterday"
 						title="Leads Delivered Today"
 					/>
 					<DashboardIcon
 						icon={CreditCardIcon}
+						stats={false}
+						statsText="poor quality leads"
 						textcolor="text-black"
 						color1="bg-red-100"
 						color2="text-red-500"
 						numToday={creditsToday}
-						numYesterday={12}
+						comparison={12}
+						comparisonTime=""
 						title="Credits Issued Today"
 					/>
 					<DashboardIcon
 						icon={CurrencyDollarIcon}
-						textcolor="text-green-500"
+						stats={false}
+						statsText="ready to bill"
+						textcolor="text-green-600"
 						color1="bg-green-100"
 						color2="text-green-500"
 						numToday={billedToday}
-						numYesterday={8}
+						comparison={8}
+						comparisonTime=""
 						title="Net Billable Leads"
 					/>
 					<DashboardIcon
 						icon={UserGroupIcon}
+						stats={false}
+						statsText="recieved leads today"
 						textcolor="text-black"
 						color1="bg-purple-100"
 						color2="text-purple-500"
 						numToday={totalClients}
-						numYesterday={6}
+						comparison={6}
+						comparisonTime=""
 						title="Active Clients"
 					/>
 				</div>

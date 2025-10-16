@@ -68,6 +68,11 @@ export default function LeadTableRow({
 				text = "text-blue-700"
 				statusText = "Billable"
 				break
+			case "paid_by_credit":
+				bg = "bg-purple-100"
+				text = "text-purple-500"
+				statusText = "Paid By Credit"
+				break
 		}
 		return (
 			<div>

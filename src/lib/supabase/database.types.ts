@@ -62,6 +62,60 @@ export type Database = {
         }
         Relationships: []
       }
+      credits: {
+        Row: {
+          additional_notes: string | null
+          adjusted_by: string | null
+          adjustment_type: string
+          amount: number
+          balance_after: number
+          client_id: number
+          created_at: string
+          id: number
+          lead_id: number | null
+          reason: string | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          adjusted_by?: string | null
+          adjustment_type: string
+          amount: number
+          balance_after: number
+          client_id: number
+          created_at?: string
+          id?: never
+          lead_id?: number | null
+          reason?: string | null
+        }
+        Update: {
+          additional_notes?: string | null
+          adjusted_by?: string | null
+          adjustment_type?: string
+          amount?: number
+          balance_after?: number
+          client_id?: number
+          created_at?: string
+          id?: never
+          lead_id?: number | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credits_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credits_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_reports: {
         Row: {
           active_clients_count: number
@@ -196,22 +250,48 @@ export type Database = {
         Args: { client_name_input: string }
         Returns: number
       }
-      issue_credit_to_lead: {
+      issue_credit_to_client: {
         Args: {
+          p_additional_notes?: string
           p_adjusted_by?: string
           p_credit_amount: number
           p_lead_id: number
-          p_reason?: string
+          p_reason: string
         }
         Returns: undefined
       }
+      issue_credit_to_lead: {
+        Args:
+          | {
+              p_additional_notes?: string
+              p_adjusted_by?: string
+              p_credit_amount: number
+              p_lead_id: number
+              p_reason: string
+            }
+          | {
+              p_adjusted_by?: string
+              p_credit_amount: number
+              p_lead_id: number
+              p_reason?: string
+            }
+        Returns: undefined
+      }
       issue_credits_to_client: {
-        Args: {
-          p_adjusted_by?: string
-          p_client_id: number
-          p_credit_amount: number
-          p_reason?: string
-        }
+        Args:
+          | {
+              p_additional_notes?: string
+              p_adjusted_by?: string
+              p_client_id: number
+              p_credit_amount: number
+              p_reason: string
+            }
+          | {
+              p_adjusted_by?: string
+              p_client_id: number
+              p_credit_amount: number
+              p_reason?: string
+            }
         Returns: undefined
       }
       reset_daily_lead_counters: {

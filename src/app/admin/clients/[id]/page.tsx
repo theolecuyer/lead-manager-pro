@@ -7,6 +7,7 @@ import AdminHeader from "@/components/AdminHeader"
 import { getClientById } from "@/lib/supabase/clients"
 import type { Client } from "../../dashboard/page"
 import BreadcrumbHeader from "@/components/BreadcrumbHeader"
+import { Tabs, Tab } from "@heroui/react"
 import {
 	Modal,
 	ModalContent,
@@ -26,8 +27,16 @@ import {
 	CurrencyDollarIcon,
 	CreditCardIcon,
 	AdjustmentsVerticalIcon,
+	CheckCircleIcon,
+	XCircleIcon,
 } from "@heroicons/react/24/solid"
+import { Database } from "@/lib/supabase/database.types"
 import DashboardIcon from "@/components/DashboardIcon"
+import { getCreditsByClientId } from "@/lib/supabase/credits"
+import LeadTableRow from "@/components/LeadTableRow"
+import CreditTableRow from "@/components/CreditTableRow"
+
+export type Credit = Database["public"]["Tables"]["credits"]["Row"]
 
 interface ClientPageProps {
 	params: Promise<{ id: string }>
@@ -37,6 +46,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const { id } = React.use(params)
 	const clientId = parseInt(id)
 	const [client, setClient] = useState<Client | null>(null)
+	const [credits, setCredits] = useState<any[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [showEmailAlert, setShowEmailAlert] = useState(false)
 	const [showPhoneAlert, setShowPhoneAlert] = useState(false)
@@ -52,8 +62,12 @@ export default function ClientPage({ params }: ClientPageProps) {
 		async function fetchClient() {
 			try {
 				setIsLoading(true)
-				const data = await getClientById(clientId)
-				setClient(data)
+				const [clientData, creditsData] = await Promise.all([
+					getClientById(clientId),
+					getCreditsByClientId(clientId),
+				])
+				setClient(clientData)
+				setCredits(creditsData)
 			} catch (error) {
 				console.error("Error fetching client:", error)
 				router.push("/admin/clients")
@@ -110,10 +124,48 @@ export default function ClientPage({ params }: ClientPageProps) {
 								{ content: `${client.name}`, href: `/admin/clients/${client.id}` },
 							]}
 						/>
-						<h1 className="text-xl font-bold text-gray-900 leading-none mt-2">
-							{client.name}
-						</h1>
-						<h1 className="text-sm text-gray-700">Client Details & Lead Management</h1>
+						<div className="flex items-center mt-2">
+							<h1 className="text-xl font-bold text-gray-900 leading-none mr-2">
+								{client.name}
+							</h1>
+							{client.active ? (
+								<div className="inline-flex items-center px-2 py-1 bg-green-100 rounded-full">
+									<CheckCircleIcon className="w-4 h-4 text-green-700 mr-0.5" />
+									<span className="text-green-700 font-semibold text-xs leading-none">
+										Active
+									</span>
+								</div>
+							) : (
+								<div className="inline-flex items-center px-2 py-1 bg-red-100 rounded-full">
+									<XCircleIcon className="w-4 h-4 text-red-700 mr-0.5" />
+									<span className="text-red-700 font-semibold text-xs leading-none">
+										Inactive
+									</span>
+								</div>
+							)}
+						</div>
+						<div className="flex items-center mt-1">
+							<EnvelopeIcon className="text-gray-600 h-3 w-3 mr-1" />
+							<p className="text-gray-600 text-sm">{client.email}</p>
+							{client.email && (
+								<DocumentDuplicateIcon
+									onClick={handleCopyEmail}
+									className="text-gray-400 h-4 w-4 ml-2 cursor-pointer hover:text-blue-600 transition"
+									title="Copy email"
+								/>
+							)}
+						</div>
+						<div className="flex items-center">
+							<PhoneIcon className="text-gray-600 h-3 w-3 mr-1" />
+							<p className="text-gray-600 text-sm">{client.phone}</p>
+							{client.phone && (
+								<DocumentDuplicateIcon
+									onClick={handleCopyPhone}
+									className="text-gray-400 h-4 w-4 ml-2 cursor-pointer hover:text-blue-600 transition"
+									title="Copy phone"
+								/>
+							)}
+						</div>
 					</div>
 				}
 				rightAction={
@@ -149,39 +201,24 @@ export default function ClientPage({ params }: ClientPageProps) {
 					)}
 				</div>
 
-				<div className="bg-white p-5 rounded-md shadow">
-					<div className="flex">
-						<div className="flex-none flex items-center justify-center w-12 h-12 my-3 rounded-full bg-blue-100 text-blue-600 font-semibold">
-							{initials}
-						</div>
-						<div className="flex flex-col mx-3 gap-1">
-							<h1 className="text-xl font-bold text-gray-900">{client.name}</h1>
-							<div className="flex items-center">
-								<EnvelopeIcon className="text-gray-600 h-3 w-3 mr-1" />
-								<p className="text-gray-600 text-sm">{client.email}</p>
-								{client.email && (
-									<DocumentDuplicateIcon
-										onClick={handleCopyEmail}
-										className="text-gray-400 h-4 w-4 ml-2 cursor-pointer hover:text-blue-600 transition"
-										title="Copy email"
-									/>
-								)}
-							</div>
-							<div className="flex items-center">
-								<PhoneIcon className="text-gray-600 h-3 w-3 mr-1" />
-								<p className="text-gray-600 text-sm">{client.phone}</p>
-								{client.phone && (
-									<DocumentDuplicateIcon
-										onClick={handleCopyPhone}
-										className="text-gray-400 h-4 w-4 ml-2 cursor-pointer hover:text-blue-600 transition"
-										title="Copy phone"
-									/>
-								)}
-							</div>
-						</div>
-					</div>
+				<div className="inline-block bg-white border border-gray-200 rounded-lg mb-4 -my-2">
+					<Tabs
+						aria-label="Options"
+						color="primary"
+						variant="solid"
+						classNames={{
+							tabList: "bg-white",
+							tabContent:
+								"group-data-[selected=true]:text-white text-black hover:text-gray-600",
+						}}
+					>
+						<Tab key="all-time" title="All Time" />
+						<Tab key="this-month" title="This Month" />
+						<Tab key="today" title="Today" />
+					</Tabs>
 				</div>
-				<div className="my-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+				<div className="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<DashboardIcon
 						icon={ArrowTrendingUpIcon}
 						stats={true}
@@ -248,6 +285,53 @@ export default function ClientPage({ params }: ClientPageProps) {
 								Adjust Credits
 							</button>
 						</div>
+						<div className="flex items-center mt-2">
+							<div className="flex flex-col">
+								<h1 className="text-2xl font-bold font-sans">
+									{client.credit_balance} Credit
+									{client.credit_balance > 1 ? "s" : ""}
+								</h1>
+								<p className="text-sm font-medium text-gray-600">
+									Available for future deductions
+								</p>
+							</div>
+							<div className="bg-gray-200 w-px h-[90%] mx-6"></div>
+							<div className="flex flex-col">
+								<p className="text-sm font-medium text-gray-600">Last Adjustment</p>
+								<p className="text-sm font-semibold">+x Credits on Date, 2025</p>
+								<p className="text-xs font-medium text-gray-600">
+									Reason: insert reason
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div className="bg-white p-5 rounded-md shadow my-5">
+					<h1 className="font-bold font-sans">Credit History</h1>
+					<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
+						<p className="text-small font-sans font-medium text-gray-600 ml-2">DATE</p>
+						<p className="text-small font-sans font-medium text-gray-600 ml-[30%]">
+							TYPE
+						</p>
+						<p className="text-small font-sans font-medium text-gray-600">AMOUNT</p>
+						<p className="text-small font-sans font-medium text-gray-600 ml-[-20%]">
+							BALANCE
+						</p>
+						<p className="text-small font-sans font-medium text-gray-600 ml-[-20%]">
+							NOTES
+						</p>
+						<p className="flex justify-start text-small font-sans font-medium text-gray-600 ml-[30%]">
+							BY
+						</p>
+					</div>
+					<div className="flex flex-col -mx-5">
+						{credits.length > 0 ? (
+							credits.map((credit) => <CreditTableRow key={credit.id} {...credit} />)
+						) : (
+							<p className="text-center text-sm text-gray-500 p-5">
+								No credits received.
+							</p>
+						)}
 					</div>
 				</div>
 				<div className="p-10">

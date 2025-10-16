@@ -37,6 +37,7 @@ export interface IssueCreditToLeadParams {
 	leadId: number
 	creditAmount: number
 	reason?: string
+	additionalNotes?: string
 	adjustedBy?: string
 }
 
@@ -44,6 +45,7 @@ export async function issueCreditToLead({
 	leadId,
 	creditAmount,
 	reason,
+	additionalNotes,
 	adjustedBy,
 }: IssueCreditToLeadParams) {
 	const supabase = createClient()
@@ -54,6 +56,7 @@ export async function issueCreditToLead({
 		p_lead_id: leadId,
 		p_credit_amount: creditAmount,
 		p_reason: reason,
+		p_additional_notes: additionalNotes || null,
 		p_adjusted_by: userId,
 	})
 
@@ -63,4 +66,87 @@ export async function issueCreditToLead({
 	}
 
 	return { success: true, data }
+}
+
+export async function getAllCredits() {
+	const supabase = createClient()
+
+	const { data, error } = await supabase
+		.from("credits")
+		.select(`
+			*,
+			client:clients(id, name, email, phone),
+			lead:leads(id, lead_name, lead_phone, lead_address)
+		`)
+		.order("created_at", { ascending: false })
+
+	if (error) {
+		console.error("Error fetching credits:", error)
+		throw new Error(error.message)
+	}
+
+	return data
+}
+
+export async function getCreditsByClientId(clientId: number) {
+	const supabase = createClient()
+
+	const { data, error } = await supabase
+		.from("credits")
+		.select(`
+			*,
+			client:clients(id, name, email, phone),
+			lead:leads(id, lead_name, lead_phone, lead_address)
+		`)
+		.eq("client_id", clientId)
+		.order("created_at", { ascending: false })
+
+	if (error) {
+		console.error("Error fetching client credits:", error)
+		throw new Error(error.message)
+	}
+
+	return data
+}
+
+export async function getCreditsByLeadId(leadId: number) {
+	const supabase = createClient()
+
+	const { data, error } = await supabase
+		.from("credits")
+		.select(`
+			*,
+			client:clients(id, name, email, phone),
+			lead:leads(id, lead_name, lead_phone, lead_address)
+		`)
+		.eq("lead_id", leadId)
+		.order("created_at", { ascending: false })
+
+	if (error) {
+		console.error("Error fetching lead credits:", error)
+		throw new Error(error.message)
+	}
+
+	return data
+}
+
+export async function getRecentCredits(limit: number = 10) {
+	const supabase = createClient()
+
+	const { data, error } = await supabase
+		.from("credits")
+		.select(`
+			*,
+			client:clients(id, name, email, phone),
+			lead:leads(id, lead_name, lead_phone, lead_address)
+		`)
+		.order("created_at", { ascending: false })
+		.limit(limit)
+
+	if (error) {
+		console.error("Error fetching recent credits:", error)
+		throw new Error(error.message)
+	}
+
+	return data
 }

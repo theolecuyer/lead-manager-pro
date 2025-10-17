@@ -1,15 +1,17 @@
 import { Credit } from "@/app/admin/clients/[id]/page"
 
 export default function CreditTableRow(credit: Credit) {
-	const createdDate = new Date(credit.created_at)
-	const formattedDate = createdDate.toLocaleString("en-US", {
-		timeZone: "America/New_York",
-		month: "long",
-		day: "numeric",
-		hour: "numeric",
-		minute: "2-digit",
-		hour12: true,
-	})
+	const formattedDate = credit.created_at
+		? new Date(credit.created_at).toLocaleString("en-US", {
+				timeZone: "America/New_York",
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+				hour: "numeric",
+				minute: "2-digit",
+				hour12: true,
+		  })
+		: "-"
 
 	const REASON_MAP: Record<string, string> = {
 		poor_lead_quality: "Poor Lead Quality",

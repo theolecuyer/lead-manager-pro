@@ -5,29 +5,24 @@ import { useRouter } from "next/navigation"
 
 export type LeadCardProps = {
 	id: number
-	clientId: number
-	clientName?: string
+	createdAt?: string
 	leadName?: string
 	phone?: string
-	createdAt?: string
+	address?: string
 	status?: string
 	onLeadUpdated?: () => void
 }
 
 export default function ClientLeadTableRow({
 	id,
-	clientId,
-	clientName,
+	createdAt,
 	leadName,
 	phone,
-	createdAt,
+	address,
 	status,
 	onLeadUpdated,
 }: LeadCardProps) {
 	const router = useRouter()
-	const handleClientClick = () => {
-		router.push(`/admin/clients/${clientId}`)
-	}
 
 	const handleView = () => {
 		console.log("view")
@@ -84,24 +79,25 @@ export default function ClientLeadTableRow({
 	}
 
 	const formattedTime = createdAt
-		? new Date(createdAt).toLocaleTimeString("en-US", {
-				timeZone: "America/New_York", // EST
-				hour: "2-digit",
+		? new Date(createdAt).toLocaleString("en-US", {
+				timeZone: "America/New_York",
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+				hour: "numeric",
 				minute: "2-digit",
 				hour12: true,
 		  })
 		: "-"
+
 	return (
 		<div className="grid grid-cols-6 border-y border-gray-100 grid-rows-1 p-3 px-5 items-center">
-			<button
-				onClick={handleClientClick}
-				className="ml-2 flex justify-start text-small text-blue-500 font-sans font-semibold hover:cursor-pointer"
-			>
-				{clientName}
-			</button>
-			<p className="text-small font-sans font-medium text-gray-700"> {leadName}</p>
+			<p className="ml-2 flex justify-start text-small font-sans font-medium text-gray-700">
+				{formattedTime}
+			</p>
+			<p className="text-small font-sans font-medium text-gray-700 ml-[15%]"> {leadName}</p>
 			<p className="text-small font-sans font-medium text-gray-700">{phone}</p>
-			<p className="text-small font-sans font-medium text-gray-600">{formattedTime}</p>
+			<p className="text-small font-sans font-medium text-gray-600">{address}</p>
 			{statusObject()}
 			<div className="flex gap-10 justify-end mr-2">
 				<button className="text-small text-blue-500 font-medium hover:cursor-pointer">

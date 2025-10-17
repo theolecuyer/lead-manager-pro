@@ -104,13 +104,19 @@ export default function ClientPage({ params }: ClientPageProps) {
 
 	async function onLeadUpdated() {
 		try {
-			const [leadData] = await Promise.all([getLeadsByClient(clientId)])
-			setLeads(leadData)
+			const [clientData, creditsData, leadsData] = await Promise.all([
+				getClientById(clientId),
+				getCreditsByClientId(clientId),
+				getLeadsByClient(clientId),
+			])
+
+			setClient(clientData)
+			setCredits(creditsData)
+			setLeads(leadsData)
 		} catch (error) {
-			console.error("Error fetching leads:", error)
+			console.error("Error refreshing client data:", error)
 		}
 	}
-
 	const handleCopyEmail = () => {
 		if (client?.email) {
 			navigator.clipboard.writeText(client.email)
@@ -154,23 +160,23 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const itemsPerCreditPage = 10
 	const itemsPerLeadPage = 10
 
-	const totalLeadPages = Math.ceil(leads.length / itemsPerLeadPage)
-	const startLeadIndex = (currentLeadPage - 1) * itemsPerLeadPage
-	const paginatedLeads = leads.slice(startLeadIndex, startLeadIndex + itemsPerLeadPage)
-
 	const totalCreditPages = Math.ceil(credits.length / itemsPerCreditPage)
 	const paginatedCredits = credits.slice(
 		(currentCreditPage - 1) * itemsPerCreditPage,
 		currentCreditPage * itemsPerCreditPage
 	)
 
-	const filteredLeads = paginatedLeads.filter((lead) => {
+	const filteredLeads = leads.filter((lead) => {
 		const matchesSearch =
 			lead.lead_name.toLowerCase().includes(search.toLowerCase()) ||
 			lead.lead_phone.includes(search)
 		const matchesStatus = statusFilter === "all" || lead.payment_status === statusFilter
 		return matchesSearch && matchesStatus
 	})
+
+	const totalLeadPages = Math.ceil(filteredLeads.length / itemsPerLeadPage)
+	const startLeadIndex = (currentLeadPage - 1) * itemsPerLeadPage
+	const paginatedLeads = filteredLeads.slice(startLeadIndex, startLeadIndex + itemsPerLeadPage)
 
 	const handleStatusChange = (value: string) => {
 		setStatusFilter(value)
@@ -355,7 +361,9 @@ export default function ClientPage({ params }: ClientPageProps) {
 							<div className="flex flex-col">
 								<h1 className="text-2xl font-bold font-sans">
 									{client.credit_balance} Credit
-									{client.credit_balance > 1 ? "s" : ""}
+									{client.credit_balance > 1 || client.credit_balance == 0
+										? "s"
+										: ""}
 								</h1>
 								<p className="text-sm font-medium text-gray-600">
 									Available for future deductions
@@ -368,7 +376,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 									{lastCredit ? (
 										<>
 											{lastCredit.amount > 0 ? "+" : ""}
-											{lastCredit.amount} Credits on{" "}
+											{lastCredit.amount} Credit
+											{lastCredit.amount > 1 ? "s" : ""} on{" "}
 											{new Date(lastCredit.created_at).toLocaleDateString()}
 										</>
 									) : (
@@ -488,7 +497,9 @@ export default function ClientPage({ params }: ClientPageProps) {
 						<p className="text-small font-sans font-medium text-gray-600 ml-2">
 							DATE RECIEVED
 						</p>
-						<p className="text-small font-sans font-medium text-gray-600">LEAD NAME</p>
+						<p className="text-small font-sans font-medium text-gray-600 ml-[15%]">
+							LEAD NAME
+						</p>
 						<p className="text-small font-sans font-medium text-gray-600">PHONE</p>
 						<p className="text-small font-sans font-medium text-gray-600">ADDRESS</p>
 						<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
@@ -497,16 +508,15 @@ export default function ClientPage({ params }: ClientPageProps) {
 						</p>
 					</div>
 					<div className="flex flex-col -mx-5">
-						{filteredLeads.length > 0 ? (
-							filteredLeads.map((lead) => (
+						{paginatedLeads.length > 0 ? (
+							paginatedLeads.map((lead) => (
 								<ClientLeadTableRow
 									key={lead.id}
 									id={lead.id}
-									clientId={lead.client?.id}
-									clientName={lead.client?.name || "Unknown"}
+									createdAt={lead.created_at}
 									leadName={lead.lead_name}
 									phone={lead.lead_phone}
-									createdAt={lead.created_at}
+									address={lead.lead_address}
 									status={lead.payment_status}
 									onLeadUpdated={onLeadUpdated}
 								/>

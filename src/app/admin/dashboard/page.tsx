@@ -206,8 +206,8 @@ export default function AdminDashboard() {
 				</div>
 				<div>
 					<div className="bg-white p-5 rounded-md shadow col-span-4">
-						<h1 className="font-bold font-sans">Client Overview</h1>
-						<div className="flex items-center gap-3 my-5">
+						<h1 className="text-lg font-bold font-sans">Client Overview</h1>
+						<div className="flex items-center gap-3 my-3">
 							<div className="relative flex-1 max-w-md">
 								<MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
 								<input
@@ -279,7 +279,7 @@ export default function AdminDashboard() {
 					</div>
 				</div>
 				<div className="bg-white p-5 rounded-md shadow col-span-4">
-					<h1 className="font-bold font-sans">Today's Leads</h1>
+					<h1 className="text-lg font-bold font-sans">Today's Leads</h1>
 					<p className="text-xs font-sans mt-0.5">
 						All leads recieved today across all clients
 					</p>

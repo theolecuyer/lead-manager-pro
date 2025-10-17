@@ -50,14 +50,30 @@ export async function issueCreditToLead({
 }: IssueCreditToLeadParams) {
 	const supabase = createClient()
 
-	const userId = adjustedBy || (await supabase.auth.getUser()).data.user?.id
+	let userName = adjustedBy
+
+	if (!userName) {
+		const { data: { user } } = await supabase.auth.getUser()
+		
+		if (user) {
+			const { data: profile } = await supabase
+				.from('profiles')
+				.select('full_name')
+				.eq('id', user.id)
+				.single()
+			
+			userName = profile?.full_name || 'Unknown User'
+		} else {
+			userName = 'System'
+		}
+	}
 
 	const { data, error } = await supabase.rpc("issue_credit_to_lead", {
 		p_lead_id: leadId,
 		p_credit_amount: creditAmount,
 		p_reason: reason,
 		p_additional_notes: additionalNotes || null,
-		p_adjusted_by: userId,
+		p_adjusted_by: userName
 	})
 
 	if (error) {

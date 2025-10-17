@@ -29,12 +29,16 @@ import {
 	AdjustmentsVerticalIcon,
 	CheckCircleIcon,
 	XCircleIcon,
+	MagnifyingGlassIcon,
+	ChevronDownIcon,
 } from "@heroicons/react/24/solid"
 import { Database } from "@/lib/supabase/database.types"
 import DashboardIcon from "@/components/DashboardIcon"
 import { getCreditsByClientId } from "@/lib/supabase/credits"
-import LeadTableRow from "@/components/LeadTableRow"
+import ClientLeadTableRow from "@/components/ClientLeadTableRow"
 import CreditTableRow from "@/components/CreditTableRow"
+import Pagination from "@/components/Pagination"
+import { getLeadsByClient } from "@/lib/supabase/leads"
 
 export type Credit = Database["public"]["Tables"]["credits"]["Row"]
 
@@ -47,9 +51,24 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const clientId = parseInt(id)
 	const [client, setClient] = useState<Client | null>(null)
 	const [credits, setCredits] = useState<any[]>([])
+	const [leads, setLeads] = useState<any[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [showEmailAlert, setShowEmailAlert] = useState(false)
+	const [currentCreditPage, setCurrentCreditPage] = useState(1)
+	const [currentLeadPage, setCurrentLeadPage] = useState(1)
 	const [showPhoneAlert, setShowPhoneAlert] = useState(false)
+	const [search, setSearch] = useState("")
+	const [statusFilter, setStatusFilter] = useState("all")
+	const [isStatusOpen, setIsStatusOpen] = useState(false)
+
+	const statusOptions = [
+		{ value: "all", label: "Any Status" },
+		{ value: "billable", label: "Billable" },
+		{ value: "paid", label: "Paid" },
+		{ value: "paid_by_credit", label: "Paid by Credit" },
+		{ value: "credited", label: "Credited" },
+	]
+
 	const router = useRouter()
 	const { isOpen, onOpen, onOpenChange } = useDisclosure()
 	const {
@@ -62,12 +81,14 @@ export default function ClientPage({ params }: ClientPageProps) {
 		async function fetchClient() {
 			try {
 				setIsLoading(true)
-				const [clientData, creditsData] = await Promise.all([
+				const [clientData, creditsData, leadsData] = await Promise.all([
 					getClientById(clientId),
 					getCreditsByClientId(clientId),
+					getLeadsByClient(clientId),
 				])
 				setClient(clientData)
 				setCredits(creditsData)
+				setLeads(leadsData)
 			} catch (error) {
 				console.error("Error fetching client:", error)
 				router.push("/admin/clients")
@@ -80,6 +101,15 @@ export default function ClientPage({ params }: ClientPageProps) {
 			fetchClient()
 		}
 	}, [clientId, router])
+
+	async function onLeadUpdated() {
+		try {
+			const [leadData] = await Promise.all([getLeadsByClient(clientId)])
+			setLeads(leadData)
+		} catch (error) {
+			console.error("Error fetching leads:", error)
+		}
+	}
 
 	const handleCopyEmail = () => {
 		if (client?.email) {
@@ -104,13 +134,49 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const netBillable = client.leads_paid_today
 	const credited = client.leads_received_today - client.leads_paid_today
 
-	const initials = (client.name ?? "")
-		.split(" ")
-		.filter(Boolean)
-		.map((word) => word[0])
-		.slice(0, 2)
-		.join("")
-		.toUpperCase()
+	const lastCredit = credits.length > 0 ? credits[0] : null
+
+	const REASON_MAP: Record<string, string> = {
+		poor_lead_quality: "Poor Lead Quality",
+		duplicate: "Duplicate",
+		wrong_service_area: "Wrong Service Area",
+		customer_goodwill: "Customer Goodwill",
+		manual_adjustment: "Manual Adjustment",
+		auto_applied_to_lead: "Auto Applied to Lead",
+		retroactive_application: "Retroactive Application",
+		other: "Other",
+	}
+
+	let formattedReason = "N/A"
+	if (lastCredit) {
+		formattedReason = REASON_MAP[lastCredit.reason]
+	}
+	const itemsPerCreditPage = 10
+	const itemsPerLeadPage = 10
+
+	const totalLeadPages = Math.ceil(leads.length / itemsPerLeadPage)
+	const startLeadIndex = (currentLeadPage - 1) * itemsPerLeadPage
+	const paginatedLeads = leads.slice(startLeadIndex, startLeadIndex + itemsPerLeadPage)
+
+	const totalCreditPages = Math.ceil(credits.length / itemsPerCreditPage)
+	const paginatedCredits = credits.slice(
+		(currentCreditPage - 1) * itemsPerCreditPage,
+		currentCreditPage * itemsPerCreditPage
+	)
+
+	const filteredLeads = paginatedLeads.filter((lead) => {
+		const matchesSearch =
+			lead.lead_name.toLowerCase().includes(search.toLowerCase()) ||
+			lead.lead_phone.includes(search)
+		const matchesStatus = statusFilter === "all" || lead.payment_status === statusFilter
+		return matchesSearch && matchesStatus
+	})
+
+	const handleStatusChange = (value: string) => {
+		setStatusFilter(value)
+		setIsStatusOpen(false)
+		setCurrentLeadPage(1)
+	}
 
 	return (
 		<>
@@ -271,7 +337,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 				<div className="bg-white p-5 rounded-md shadow">
 					<div className="grid grid-cols-2 gap-4">
 						<div>
-							<h1 className="font-bold font-sans">Manage Account Credits</h1>
+							<h1 className="text-lg font-bold font-sans">Manage Account Credits</h1>
 							<h1 className="text-sm font-sans text-gray-600">
 								Credits will be automatically deducted from next billing cycle
 							</h1>
@@ -298,19 +364,29 @@ export default function ClientPage({ params }: ClientPageProps) {
 							<div className="bg-gray-200 w-px h-[90%] mx-6"></div>
 							<div className="flex flex-col">
 								<p className="text-sm font-medium text-gray-600">Last Adjustment</p>
-								<p className="text-sm font-semibold">+x Credits on Date, 2025</p>
+								<p className="text-sm font-semibold">
+									{lastCredit ? (
+										<>
+											{lastCredit.amount > 0 ? "+" : ""}
+											{lastCredit.amount} Credits on{" "}
+											{new Date(lastCredit.created_at).toLocaleDateString()}
+										</>
+									) : (
+										"No adjustments yet"
+									)}
+								</p>
 								<p className="text-xs font-medium text-gray-600">
-									Reason: insert reason
+									Reason: {formattedReason}
 								</p>
 							</div>
 						</div>
 					</div>
 				</div>
 				<div className="bg-white p-5 rounded-md shadow my-5">
-					<h1 className="font-bold font-sans">Credit History</h1>
+					<h1 className="text-lg font-bold font-sans">Credit History</h1>
 					<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
 						<p className="text-small font-sans font-medium text-gray-600 ml-2">DATE</p>
-						<p className="text-small font-sans font-medium text-gray-600 ml-[30%]">
+						<p className="text-small font-sans font-medium text-gray-600 ml-[20%]">
 							TYPE
 						</p>
 						<p className="text-small font-sans font-medium text-gray-600">AMOUNT</p>
@@ -318,36 +394,139 @@ export default function ClientPage({ params }: ClientPageProps) {
 							BALANCE
 						</p>
 						<p className="text-small font-sans font-medium text-gray-600 ml-[-20%]">
-							NOTES
+							REASON
 						</p>
 						<p className="flex justify-start text-small font-sans font-medium text-gray-600 ml-[30%]">
 							BY
 						</p>
 					</div>
 					<div className="flex flex-col -mx-5">
-						{credits.length > 0 ? (
-							credits.map((credit) => <CreditTableRow key={credit.id} {...credit} />)
+						{paginatedCredits.length > 0 ? (
+							paginatedCredits.map((credit) => (
+								<CreditTableRow key={credit.id} {...credit} />
+							))
 						) : (
 							<p className="text-center text-sm text-gray-500 p-5">
 								No credits received.
 							</p>
 						)}
 					</div>
+					<div className="rounded-b-md border-t border-gray-200 bg-gray-50 p-3 px-5 -mx-5 -my-5 mt-auto">
+						<Pagination
+							name="credits"
+							currentPage={currentCreditPage}
+							totalPages={totalCreditPages}
+							itemsPerPage={itemsPerCreditPage}
+							totalItems={credits.length}
+							onPageChange={setCurrentCreditPage}
+						/>
+					</div>
 				</div>
-				<div className="p-10">
-					<h1 className="text-2xl font-bold mb-2">{client.name}</h1>
-					<p className="text-gray-700">
-						Leads Received Today: {client.leads_received_today}
-					</p>
-					<p className="text-gray-700">Net Billable Today: {netBillable}</p>
-					<p className="text-gray-700">Credited Today: {credited}</p>
-					<p className="text-gray-700">Credit Balance: {client.credit_balance}</p>
-					<p className="text-gray-700">
-						Credits Issued Today: {client.credits_issued_today}
-					</p>
-					<p className="text-gray-700">Email: {client.email || "N/A"}</p>
-					<p className="text-gray-700">Phone: {client.phone || "N/A"}</p>
-					<p className="text-gray-700">Status: {client.active ? "Active" : "Inactive"}</p>
+
+				<div className="bg-white p-5 rounded-md shadow my-5">
+					<div className="flex justify-between items-center">
+						{/* Left: Lead History Title */}
+						<div className="flex items-center gap-2">
+							<h1 className="text-lg font-bold font-sans">Lead History</h1>
+							<span className="font-sans text-gray-500">({leads.length} total)</span>
+						</div>
+
+						{/* Right: Search + Status */}
+						<div className="flex items-center gap-4">
+							{/* Search Bar */}
+							<div className="relative w-64">
+								<MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
+								<input
+									type="text"
+									placeholder="Search leads..."
+									className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-sans"
+									value={search}
+									onChange={(e) => setSearch(e.target.value)}
+								/>
+							</div>
+
+							{/* Status Filter Dropdown */}
+							<div className="relative w-40">
+								<button
+									onClick={() => setIsStatusOpen(!isStatusOpen)}
+									className="w-full h-10 px-3 text-left bg-white border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between gap-2"
+								>
+									<span className="text-sm text-gray-700 truncate">
+										{
+											statusOptions.find((opt) => opt.value === statusFilter)
+												?.label
+										}
+									</span>
+									<ChevronDownIcon
+										className={`w-4 h-4 text-gray-400 transition-transform ${
+											isStatusOpen ? "rotate-180" : ""
+										}`}
+									/>
+								</button>
+								{isStatusOpen && (
+									<div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+										{statusOptions.map((option) => (
+											<button
+												key={option.value}
+												onClick={() => handleStatusChange(option.value)}
+												className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 first:rounded-t-md last:rounded-b-md ${
+													statusFilter === option.value
+														? "bg-blue-50 text-blue-600"
+														: "text-gray-700"
+												}`}
+											>
+												{option.label}
+											</button>
+										))}
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+
+					<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
+						<p className="text-small font-sans font-medium text-gray-600 ml-2">
+							DATE RECIEVED
+						</p>
+						<p className="text-small font-sans font-medium text-gray-600">LEAD NAME</p>
+						<p className="text-small font-sans font-medium text-gray-600">PHONE</p>
+						<p className="text-small font-sans font-medium text-gray-600">ADDRESS</p>
+						<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
+						<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
+							ACTIONS
+						</p>
+					</div>
+					<div className="flex flex-col -mx-5">
+						{filteredLeads.length > 0 ? (
+							filteredLeads.map((lead) => (
+								<ClientLeadTableRow
+									key={lead.id}
+									id={lead.id}
+									clientId={lead.client?.id}
+									clientName={lead.client?.name || "Unknown"}
+									leadName={lead.lead_name}
+									phone={lead.lead_phone}
+									createdAt={lead.created_at}
+									status={lead.payment_status}
+									onLeadUpdated={onLeadUpdated}
+								/>
+							))
+						) : (
+							<p className="text-center text-sm text-gray-500 p-5">
+								No leads received today.
+							</p>
+						)}
+					</div>
+					<div className="rounded-b-md border-t border-gray-200 bg-gray-50 p-3 px-5 -mx-5 -my-5 mt-auto">
+						<Pagination
+							name="leads"
+							currentPage={currentLeadPage}
+							totalPages={totalLeadPages}
+							itemsPerPage={itemsPerLeadPage}
+							totalItems={leads.length}
+							onPageChange={setCurrentLeadPage}
+						/>
+					</div>
 				</div>
 			</AdminHeader>
 

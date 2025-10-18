@@ -7,7 +7,17 @@ import AdminHeader from "@/components/AdminHeader"
 import { getClientById } from "@/lib/supabase/clients"
 import type { Client } from "../../dashboard/page"
 import BreadcrumbHeader from "@/components/BreadcrumbHeader"
-import { Tabs, Tab } from "@heroui/react"
+import {
+	Tabs,
+	Tab,
+	RadioGroup,
+	Radio,
+	Input,
+	Select,
+	SelectItem,
+	Textarea,
+	Checkbox,
+} from "@heroui/react"
 import {
 	Modal,
 	ModalContent,
@@ -33,12 +43,12 @@ import {
 	ChevronDownIcon,
 } from "@heroicons/react/24/solid"
 import { Database } from "@/lib/supabase/database.types"
-import DashboardIcon from "@/components/DashboardIcon"
 import { getCreditsByClientId } from "@/lib/supabase/credits"
 import ClientLeadTableRow from "@/components/ClientLeadTableRow"
 import CreditTableRow from "@/components/CreditTableRow"
 import Pagination from "@/components/Pagination"
 import { getLeadsByClient } from "@/lib/supabase/leads"
+import ClientDashboardIcon from "@/components/ClientDashboardIcon"
 
 export type Credit = Database["public"]["Tables"]["credits"]["Row"]
 
@@ -54,12 +64,18 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const [leads, setLeads] = useState<any[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [showEmailAlert, setShowEmailAlert] = useState(false)
+	const [adjustmentType, setAdjustmentType] = useState("add")
+	const [selectedPeriod, setSelectedPeriod] = useState<"all" | "month" | "today">("all")
 	const [currentCreditPage, setCurrentCreditPage] = useState(1)
 	const [currentLeadPage, setCurrentLeadPage] = useState(1)
 	const [showPhoneAlert, setShowPhoneAlert] = useState(false)
 	const [search, setSearch] = useState("")
 	const [statusFilter, setStatusFilter] = useState("all")
 	const [isStatusOpen, setIsStatusOpen] = useState(false)
+	const [creditAmount, setCreditAmount] = useState("1")
+	const [reason, setReason] = useState("")
+	const [notes, setNotes] = useState("")
+	const [isConfirmed, setIsConfirmed] = useState(false)
 
 	const statusOptions = [
 		{ value: "all", label: "Any Status" },
@@ -68,6 +84,64 @@ export default function ClientPage({ params }: ClientPageProps) {
 		{ value: "paid_by_credit", label: "Paid by Credit" },
 		{ value: "credited", label: "Credited" },
 	]
+
+	const reasonOptions = [
+		{ value: "poor_lead_quality", label: "Poor Lead Quality" },
+		{ value: "duplicate", label: "Duplicate" },
+		{ value: "wrong_service_area", label: "Wrong Service Area" },
+		{ value: "customer_goodwill", label: "Customer Goodwill" },
+		{ value: "manual_adjustment", label: "Manual Adjustment" },
+		{ value: "other", label: "Other" },
+	]
+
+	function calculateStats(
+		leads: any[],
+		credits: any[],
+		client: Client,
+		period: "all" | "month" | "today"
+	) {
+		if (period === "today") {
+			return {
+				totalLeads: client.leads_received_today,
+				totalCredits: client.credits_issued_today,
+				netBillable: client.leads_paid_today,
+			}
+		}
+
+		const now = new Date()
+		let startDate: Date
+
+		if (period === "month") {
+			startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+			startDate.setHours(0, 0, 0, 0)
+		} else {
+			startDate = new Date(0)
+		}
+
+		const filteredLeads = leads.filter((lead) => {
+			const leadDate = new Date(lead.created_at)
+			return leadDate >= startDate
+		})
+
+		const totalLeads = filteredLeads.length
+
+		const totalCredits = filteredLeads.filter(
+			(lead) => lead.payment_status === "credited"
+		).length
+
+		const netBillable = filteredLeads.filter(
+			(lead) =>
+				lead.payment_status === "billable" ||
+				lead.payment_status === "paid" ||
+				lead.payment_status === "paid_by_credit"
+		).length
+
+		return {
+			totalLeads,
+			totalCredits,
+			netBillable,
+		}
+	}
 
 	const router = useRouter()
 	const { isOpen, onOpen, onOpenChange } = useDisclosure()
@@ -184,6 +258,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 		setCurrentLeadPage(1)
 	}
 
+	const stats = calculateStats(leads, credits, client, selectedPeriod)
+
 	return (
 		<>
 			<AdminHeader
@@ -278,64 +354,86 @@ export default function ClientPage({ params }: ClientPageProps) {
 						aria-label="Options"
 						color="primary"
 						variant="solid"
+						selectedKey={selectedPeriod}
+						onSelectionChange={(key) =>
+							setSelectedPeriod(key as "all" | "month" | "today")
+						}
 						classNames={{
 							tabList: "bg-white",
 							tabContent:
 								"group-data-[selected=true]:text-white text-black hover:text-gray-600",
 						}}
 					>
-						<Tab key="all-time" title="All Time" />
-						<Tab key="this-month" title="This Month" />
+						<Tab key="all" title="All Time" />
+						<Tab key="month" title="Last 30 Days" />
 						<Tab key="today" title="Today" />
 					</Tabs>
 				</div>
 
 				<div className="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-					<DashboardIcon
+					<ClientDashboardIcon
 						icon={ArrowTrendingUpIcon}
 						stats={true}
 						statsText=""
 						textcolor="text-black"
 						color1="bg-blue-100"
 						color2="text-blue-500"
-						numToday={2}
+						numToday={stats.totalLeads}
 						comparison={8}
 						comparisonTime="from last month"
-						title="Total Leads This Month"
+						title={`Leads ${
+							selectedPeriod === "all"
+								? "All Time"
+								: selectedPeriod === "month"
+								? "Last 30 Days"
+								: "Today"
+						}`}
 					/>
-					<DashboardIcon
+					<ClientDashboardIcon
 						icon={MinusCircleIcon}
 						stats={false}
 						statsText="quality adjustments"
 						textcolor="text-red-500"
 						color1="bg-red-100"
 						color2="text-red-500"
-						numToday={2}
+						numToday={stats.totalCredits}
 						comparison={12}
 						comparisonTime="from last month"
-						title="Credits This Month"
+						title={`Credits ${
+							selectedPeriod === "all"
+								? "All Time"
+								: selectedPeriod === "month"
+								? "Last 30 Days"
+								: "Today"
+						}`}
 					/>
-					<DashboardIcon
+					<ClientDashboardIcon
 						icon={CurrencyDollarIcon}
 						stats={false}
 						statsText="leads billed this month"
 						textcolor="text-green-600"
 						color1="bg-green-100"
 						color2="text-green-500"
-						numToday={2}
+						numToday={stats.netBillable}
 						comparison={8}
 						comparisonTime="from last month"
-						title="Net Billable This Month"
+						title={`Billable ${
+							selectedPeriod === "all"
+								? "All Time"
+								: selectedPeriod === "month"
+								? "Last 30 Days"
+								: "Today"
+						}`}
 					/>
-					<DashboardIcon
+					<ClientDashboardIcon
 						icon={CreditCardIcon}
 						stats={false}
 						statsText="available credits"
 						textcolor="text-purple-500"
 						color1="bg-purple-100"
 						color2="text-purple-500"
-						numToday={2}
-						comparison={6}
+						numToday={client.credit_balance}
+						comparison={0}
 						comparisonTime="from last month"
 						title="Account Credit Balance"
 					/>
@@ -434,15 +532,11 @@ export default function ClientPage({ params }: ClientPageProps) {
 
 				<div className="bg-white p-5 rounded-md shadow my-5">
 					<div className="flex justify-between items-center">
-						{/* Left: Lead History Title */}
 						<div className="flex items-center gap-2">
 							<h1 className="text-lg font-bold font-sans">Lead History</h1>
 							<span className="font-sans text-gray-500">({leads.length} total)</span>
 						</div>
-
-						{/* Right: Search + Status */}
 						<div className="flex items-center gap-4">
-							{/* Search Bar */}
 							<div className="relative w-64">
 								<MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
 								<input
@@ -453,8 +547,6 @@ export default function ClientPage({ params }: ClientPageProps) {
 									onChange={(e) => setSearch(e.target.value)}
 								/>
 							</div>
-
-							{/* Status Filter Dropdown */}
 							<div className="relative w-40">
 								<button
 									onClick={() => setIsStatusOpen(!isStatusOpen)}
@@ -571,9 +663,76 @@ export default function ClientPage({ params }: ClientPageProps) {
 						<>
 							<ModalHeader className="flex flex-col gap-1">
 								Adjust Account Credits
+								<p className="text-sm font-normal text-gray-600">
+									Make adjustments to {client.name}'s credit balance
+								</p>
+								<div className="-mx-6 w-[calc(100%+3rem)] h-px bg-gray-200 mt-3"></div>
 							</ModalHeader>
 							<ModalBody>
-								<p>Credit adjustment form will go here...</p>
+								<div className="flex gap-1 -mt-2">
+									<p className="text-sm font-sans text-gray-600">
+										Current Balance:{" "}
+									</p>
+									<p className="text-sm font-sans text-gray-600 font-semibold">
+										{client.credit_balance} credit
+										{client.credit_balance > 1 || client.credit_balance == 0
+											? "s"
+											: ""}
+									</p>
+								</div>
+								<div className="flex flex-col gap-5">
+									<RadioGroup
+										label="Adjustment Type"
+										value={adjustmentType}
+										onValueChange={setAdjustmentType}
+										size="sm"
+										classNames={{
+											label: "text-sm font-medium text-gray-700",
+										}}
+									>
+										<Radio value="add">Add Credits</Radio>
+										<Radio value="remove">Remove Credits</Radio>
+									</RadioGroup>
+									<Input
+										type="number"
+										label="Number of Credits"
+										value={creditAmount}
+										onValueChange={setCreditAmount}
+										min="1"
+										size="sm"
+									/>
+									<Select
+										label="Reason"
+										placeholder="Select a reason"
+										selectedKeys={reason ? [reason] : []}
+										onSelectionChange={(keys) =>
+											setReason(Array.from(keys)[0] as string)
+										}
+										size="sm"
+									>
+										{reasonOptions.map((option) => (
+											<SelectItem key={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</Select>
+
+									<Textarea
+										label="Notes (Optional)"
+										placeholder="Additional explanation for audit trail..."
+										value={notes}
+										onValueChange={setNotes}
+										size="sm"
+										minRows={3}
+									/>
+									<Checkbox
+										isSelected={isConfirmed}
+										onValueChange={setIsConfirmed}
+										size="sm"
+									>
+										I confirm this adjustment is correct
+									</Checkbox>
+								</div>
 							</ModalBody>
 							<ModalFooter>
 								<Button color="danger" variant="light" onPress={onClose}>

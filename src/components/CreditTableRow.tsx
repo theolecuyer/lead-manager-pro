@@ -43,6 +43,12 @@ export default function CreditTableRow(credit: Credit) {
 			textColor2 = "text-red-800"
 			bgColor = "bg-red-100"
 			break
+		case "quality_adjustment":
+			text = "Non-Billable"
+			textColor = "text-orange-600"
+			textColor2 = "text-orange-800"
+			bgColor = "bg-orange-100"
+			break
 	}
 
 	return (

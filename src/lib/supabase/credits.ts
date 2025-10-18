@@ -1,32 +1,54 @@
 import { createClient } from "../../../utils/supabase/client"
 
-export interface IssueCreditParams {
+export interface AdjustCreditsParams {
 	clientId: number
 	creditAmount: number
-	reason?: string
+	adjustmentType: 'add' | 'remove'
+	reason: string
+	additionalNotes?: string
 	adjustedBy?: string
 }
 
-export async function issueCreditsToClient({
+export async function adjustClientCredits({
 	clientId,
 	creditAmount,
-	reason = "manual_adjustment",
+	adjustmentType,
+	reason,
+	additionalNotes,
 	adjustedBy,
-}: IssueCreditParams) {
+}: AdjustCreditsParams) {
 	const supabase = createClient()
 
-	// Get current user ID if not provided
-	const userId = adjustedBy || (await supabase.auth.getUser()).data.user?.id
+	let userName = adjustedBy
 
-	const { data, error } = await supabase.rpc("issue_credits_to_client", {
+	if (!userName) {
+		const { data: { user } } = await supabase.auth.getUser()
+		
+		if (user) {
+			const { data: profile } = await supabase
+				.from('profiles')
+				.select('full_name')
+				.eq('id', user.id)
+				.single()
+			
+			userName = profile?.full_name || 'Unknown User'
+		} else {
+			userName = 'System'
+		}
+	}
+
+	const finalAmount = adjustmentType === 'remove' ? -Math.abs(creditAmount) : Math.abs(creditAmount)
+
+	const { data, error } = await supabase.rpc("adjust_client_credits", {
 		p_client_id: clientId,
-		p_credit_amount: creditAmount,
+		p_credit_amount: finalAmount,
 		p_reason: reason,
-		p_adjusted_by: userId,
+		p_additional_notes: additionalNotes || null,
+		p_adjusted_by: userName
 	})
 
 	if (error) {
-		console.error("Error issuing credits:", error)
+		console.error("Error adjusting credits:", error)
 		throw new Error(error.message)
 	}
 

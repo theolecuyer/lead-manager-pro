@@ -43,7 +43,7 @@ import {
 	ChevronDownIcon,
 } from "@heroicons/react/24/solid"
 import { Database } from "@/lib/supabase/database.types"
-import { getCreditsByClientId } from "@/lib/supabase/credits"
+import { adjustClientCredits, getCreditsByClientId } from "@/lib/supabase/credits"
 import ClientLeadTableRow from "@/components/ClientLeadTableRow"
 import CreditTableRow from "@/components/CreditTableRow"
 import Pagination from "@/components/Pagination"
@@ -63,6 +63,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const [credits, setCredits] = useState<any[]>([])
 	const [leads, setLeads] = useState<any[]>([])
 	const [isLoading, setIsLoading] = useState(true)
+	const [isAdjusting, setIsAdjusting] = useState(false)
 	const [showEmailAlert, setShowEmailAlert] = useState(false)
 	const [adjustmentType, setAdjustmentType] = useState("add")
 	const [selectedPeriod, setSelectedPeriod] = useState<"all" | "month" | "today">("all")
@@ -75,7 +76,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const [creditAmount, setCreditAmount] = useState("1")
 	const [reason, setReason] = useState("")
 	const [notes, setNotes] = useState("")
-	const [isConfirmed, setIsConfirmed] = useState(false)
+	const [notConfirmed, setNotConfirmed] = useState(true)
 
 	const statusOptions = [
 		{ value: "all", label: "Any Status" },
@@ -259,6 +260,43 @@ export default function ClientPage({ params }: ClientPageProps) {
 	}
 
 	const stats = calculateStats(leads, credits, client, selectedPeriod)
+
+	async function handleCreditAdjustmentPress(onClose: () => void) {
+		if (!reason || notConfirmed || !client) return
+
+		setIsAdjusting(true)
+		try {
+			await adjustClientCredits({
+				clientId: client.id,
+				creditAmount: parseInt(creditAmount),
+				adjustmentType: adjustmentType as "add" | "remove",
+				reason: reason,
+				additionalNotes: notes || undefined,
+			})
+
+			const [clientData, creditsData, leadsData] = await Promise.all([
+				getClientById(client.id),
+				getCreditsByClientId(client.id),
+				getLeadsByClient(client.id),
+			])
+
+			setClient(clientData)
+			setCredits(creditsData)
+			setLeads(leadsData)
+			setCreditAmount("1")
+			setReason("")
+			setNotes("")
+			setNotConfirmed(true)
+			setAdjustmentType("add")
+
+			onClose()
+		} catch (error) {
+			console.error("Error adjusting credits:", error)
+			alert(`Failed to adjust credits. ${error}`)
+		} finally {
+			setIsAdjusting(false)
+		}
+	}
 
 	return (
 		<>
@@ -663,31 +701,28 @@ export default function ClientPage({ params }: ClientPageProps) {
 						<>
 							<ModalHeader className="flex flex-col gap-1">
 								Adjust Account Credits
-								<p className="text-sm font-normal text-gray-600">
-									Make adjustments to {client.name}'s credit balance
-								</p>
-								<div className="-mx-6 w-[calc(100%+3rem)] h-px bg-gray-200 mt-3"></div>
-							</ModalHeader>
-							<ModalBody>
-								<div className="flex gap-1 -mt-2">
-									<p className="text-sm font-sans text-gray-600">
+								<div className="flex gap-1 items-center mt-0.5">
+									<p className="text-sm font-sans text-gray-600 font-normal items-center">
 										Current Balance:{" "}
 									</p>
-									<p className="text-sm font-sans text-gray-600 font-semibold">
+									<p className="text-sm font-sans text-gray-600 font-semibold items-center">
 										{client.credit_balance} credit
 										{client.credit_balance > 1 || client.credit_balance == 0
 											? "s"
 											: ""}
 									</p>
 								</div>
-								<div className="flex flex-col gap-5">
+								<div className="-mx-6 w-[calc(100%+3rem)] h-px bg-gray-200 mt-3"></div>
+							</ModalHeader>
+							<ModalBody>
+								<div className="flex flex-col gap-5 -mt-2">
 									<RadioGroup
 										label="Adjustment Type"
 										value={adjustmentType}
 										onValueChange={setAdjustmentType}
 										size="sm"
 										classNames={{
-											label: "text-sm font-medium text-gray-700",
+											label: "text-sm font-medium text-gray-800",
 										}}
 									>
 										<Radio value="add">Add Credits</Radio>
@@ -705,9 +740,9 @@ export default function ClientPage({ params }: ClientPageProps) {
 										label="Reason"
 										placeholder="Select a reason"
 										selectedKeys={reason ? [reason] : []}
-										onSelectionChange={(keys) =>
+										onSelectionChange={(keys) => {
 											setReason(Array.from(keys)[0] as string)
-										}
+										}}
 										size="sm"
 									>
 										{reasonOptions.map((option) => (
@@ -716,7 +751,6 @@ export default function ClientPage({ params }: ClientPageProps) {
 											</SelectItem>
 										))}
 									</Select>
-
 									<Textarea
 										label="Notes (Optional)"
 										placeholder="Additional explanation for audit trail..."
@@ -725,9 +759,38 @@ export default function ClientPage({ params }: ClientPageProps) {
 										size="sm"
 										minRows={3}
 									/>
+									<div className="flex gap-1 bg-blue-50 rounded-md p-3">
+										<p className="text-sm font-sans text-blue-800 font-semibold">
+											Preview:
+										</p>
+										<p className="text-sm font-sans text-blue-800">
+											New balance will be
+										</p>
+										<p className="text-sm font-sans text-blue-800 font-semibold">
+											{adjustmentType == "add"
+												? client.credit_balance + Number(creditAmount)
+												: client.credit_balance - Number(creditAmount) < 0
+												? 0
+												: client.credit_balance - Number(creditAmount)}
+										</p>
+										<p className="text-sm font-sans text-blue-800">
+											credit
+											{adjustmentType == "add"
+												? client.credit_balance + Number(creditAmount) >
+														1 ||
+												  client.credit_balance + Number(creditAmount) == 0
+													? "s"
+													: ""
+												: client.credit_balance - Number(creditAmount) <=
+														0 ||
+												  client.credit_balance - Number(creditAmount) > 1
+												? "s"
+												: ""}
+										</p>
+									</div>
 									<Checkbox
-										isSelected={isConfirmed}
-										onValueChange={setIsConfirmed}
+										isSelected={!notConfirmed}
+										onValueChange={() => setNotConfirmed(!notConfirmed)}
 										size="sm"
 									>
 										I confirm this adjustment is correct
@@ -738,7 +801,12 @@ export default function ClientPage({ params }: ClientPageProps) {
 								<Button color="danger" variant="light" onPress={onClose}>
 									Cancel
 								</Button>
-								<Button color="primary" onPress={onClose}>
+								<Button
+									color="primary"
+									isDisabled={!reason || notConfirmed}
+									isLoading={isAdjusting}
+									onPress={() => handleCreditAdjustmentPress(onClose)}
+								>
 									Apply Adjustment
 								</Button>
 							</ModalFooter>

@@ -1,6 +1,6 @@
 import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/solid"
 
-export type DashboardIconProps = {
+export type ClientDashboardIconProps = {
 	icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
 	stats: boolean
 	statsText: string
@@ -29,7 +29,7 @@ const calculateDiff = (numToday: number, numYesterday: number): Difference => {
 	}
 }
 
-export default function DashboardIcon(dashboardIconProps: DashboardIconProps) {
+export default function ClientDashboardIcon(dashboardIconProps: ClientDashboardIconProps) {
 	const diffObject = calculateDiff(dashboardIconProps.numToday, dashboardIconProps.comparison)
 
 	return (

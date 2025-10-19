@@ -38,7 +38,7 @@ export default function LoginPage() {
 				<h1 className="text-3xl text-bold font-bold mt-2">Lead Manager Pro</h1>
 				<h1 className="text-sm text-gray-700 mt-1">Secure Admin Access Only</h1>
 				<Form
-					className="flex flex-col w-full max-w-lg bg-white p-6 rounded-lg shadow-lg shadow-gray-300 mt-5"
+					className="flex flex-col items-stretch w-full max-w-lg bg-white p-6 rounded-lg shadow-lg shadow-gray-300 mt-5"
 					onSubmit={onSubmit}
 				>
 					<div className="p-1">

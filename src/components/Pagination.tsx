@@ -67,7 +67,7 @@ export default function Pagination({
 					size="sm"
 					isDisabled={currentPage === 1}
 					onPress={() => onPageChange(currentPage - 1)}
-					className="text-gray-700 border border-gray-300 rounded-lg px-3 h-[36px]"
+					className="text-gray-700 text-small border border-gray-300 rounded-lg px-3"
 				>
 					Previous
 				</Button>
@@ -90,8 +90,8 @@ export default function Pagination({
 							onPress={() => onPageChange(page as number)}
 							className={
 								currentPage === page
-									? "bg-blue-500 text-white min-w-[36px] w-[36px] h-[36px] rounded-lg p-0"
-									: "text-gray-700 border border-gray-300 min-w-[36px] w-[36px] h-[36px] rounded-lg p-0"
+									? "bg-blue-500 text-white text-small min-w-[36px] rounded-lg p-0"
+									: "text-gray-700 text-small border border-gray-300 min-w-[36px] rounded-lg p-0"
 							}
 						>
 							{page}
@@ -103,9 +103,9 @@ export default function Pagination({
 					disableRipple
 					variant="bordered"
 					size="sm"
-					isDisabled={currentPage === totalPages}
+					isDisabled={currentPage === totalPages || totalItems == 0}
 					onPress={() => onPageChange(currentPage + 1)}
-					className="text-gray-700 border border-gray-300 rounded-lg px-3 h-[36px]"
+					className="text-gray-700 text-small border border-gray-300 rounded-lg px-3"
 				>
 					Next
 				</Button>

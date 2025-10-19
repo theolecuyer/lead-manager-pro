@@ -59,7 +59,6 @@ export default function AdminDashboard() {
 		}
 	}
 
-	// Fetch Dashboard from Supabase (Clients, Leads)
 	useEffect(() => {
 		async function fetchData() {
 			try {
@@ -68,6 +67,8 @@ export default function AdminDashboard() {
 					getAllClients(),
 					getTodaysLeads(),
 				])
+				console.log("Today's leads:", leadData) // Add this
+				console.log("Lead count:", leadData.length) // Add this
 				setClients(clientData)
 				setTodaysLeads(leadData)
 			} catch (error) {
@@ -302,13 +303,9 @@ export default function AdminDashboard() {
 							paginatedLeads.map((lead) => (
 								<LeadTableRow
 									key={lead.id}
-									id={lead.id}
+									lead={lead}
 									clientId={lead.client?.id}
 									clientName={lead.client?.name || "Unknown"}
-									leadName={lead.lead_name}
-									phone={lead.lead_phone}
-									createdAt={lead.created_at}
-									status={lead.payment_status}
 									onLeadUpdated={onLeadUpdated}
 								/>
 							))

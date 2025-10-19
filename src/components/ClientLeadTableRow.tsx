@@ -11,27 +11,25 @@ import {
 	ModalFooter,
 	Button,
 	useDisclosure,
+	Select,
+	SelectItem,
+	Textarea,
+	Checkbox,
 } from "@heroui/react"
 
+import type { Lead } from "@/app/admin/dashboard/page"
+import { InformationCircleIcon } from "@heroicons/react/24/solid"
+
 export type LeadCardProps = {
-	id: number
-	createdAt?: string
-	leadName?: string
-	phone?: string
-	address?: string
-	status?: string
+	lead: Lead
 	onLeadUpdated?: () => void
 }
 
-export default function ClientLeadTableRow({
-	id,
-	createdAt,
-	leadName,
-	phone,
-	address,
-	status,
-	onLeadUpdated,
-}: LeadCardProps) {
+export default function ClientLeadTableRow({ lead, onLeadUpdated }: LeadCardProps) {
+	const [reason, setReason] = useState("")
+	const [notes, setNotes] = useState("")
+	const [isAdjusting, setIsAdjusting] = useState(false)
+	const [notConfirmed, setNotConfirmed] = useState(true)
 	const router = useRouter()
 	const {
 		isOpen: isViewOpen,
@@ -44,6 +42,15 @@ export default function ClientLeadTableRow({
 		onOpenChange: onCreditOpenChange,
 	} = useDisclosure()
 
+	const reasonOptions = [
+		{ value: "poor_lead_quality", label: "Poor Lead Quality" },
+		{ value: "duplicate", label: "Duplicate" },
+		{ value: "wrong_service_area", label: "Wrong Service Area" },
+		{ value: "customer_goodwill", label: "Customer Goodwill" },
+		{ value: "manual_adjustment", label: "Manual Adjustment" },
+		{ value: "other", label: "Other" },
+	]
+
 	const handleView = () => {
 		onViewOpen()
 	}
@@ -53,31 +60,39 @@ export default function ClientLeadTableRow({
 	}
 
 	const handleCreditSubmit = async (onClose: () => void) => {
-		console.log(id)
-		try {
-			const reason = "poor_lead_quality"
+		if (!reason || notConfirmed) return
 
+		setIsAdjusting(true)
+		try {
 			await issueCreditToLead({
-				leadId: id,
+				leadId: lead.id,
 				creditAmount: 1,
 				reason: reason,
+				additionalNotes: notes || undefined,
 			})
 
 			console.log("Lead credited successfully!")
-			router.refresh()
+
 			onLeadUpdated?.()
+
+			setReason("")
+			setNotes("")
+			setNotConfirmed(true)
+
 			onClose()
 		} catch (error) {
 			console.error("Failed to credit lead:", error)
 			alert("Something went wrong when crediting the lead.")
+		} finally {
+			setIsAdjusting(false)
 		}
 	}
 
 	const statusObject = () => {
 		let bg = "bg-red-100"
-		let text = "text-red-500"
+		let text = "text-red-900"
 		let statusText = "Credited"
-		switch (status) {
+		switch (lead.payment_status) {
 			case "paid":
 				bg = "bg-green-100"
 				text = "text-green-500"
@@ -103,8 +118,8 @@ export default function ClientLeadTableRow({
 		)
 	}
 
-	const formattedTime = createdAt
-		? new Date(createdAt).toLocaleString("en-US", {
+	const formattedTime = lead.created_at
+		? new Date(lead.created_at).toLocaleString("en-US", {
 				timeZone: "America/New_York",
 				year: "numeric",
 				month: "2-digit",
@@ -122,11 +137,12 @@ export default function ClientLeadTableRow({
 					{formattedTime}
 				</p>
 				<p className="text-small font-sans font-medium text-gray-700 ml-[15%]">
-					{" "}
-					{leadName}
+					{lead.lead_name}
 				</p>
-				<p className="text-small font-sans font-medium text-gray-700">{phone}</p>
-				<p className="text-small font-sans font-medium text-gray-600">{address}</p>
+				<p className="text-small font-sans font-medium text-gray-700">{lead.lead_phone}</p>
+				<p className="text-small font-sans font-medium text-gray-600">
+					{lead.lead_address}
+				</p>
 				{statusObject()}
 				<div className="flex gap-10 justify-end mr-2">
 					<button
@@ -151,13 +167,98 @@ export default function ClientLeadTableRow({
 			</div>
 
 			{/* View Lead Modal */}
-			<Modal isOpen={isViewOpen} onOpenChange={onViewOpenChange}>
+			<Modal isOpen={isViewOpen} onOpenChange={onViewOpenChange} size="lg">
 				<ModalContent>
 					{(onClose) => (
 						<>
-							<ModalHeader className="flex flex-col gap-1">Lead Details</ModalHeader>
+							<ModalHeader className="flex flex-col gap-1">
+								<h1>Lead Details</h1>
+								<div className="-mx-6 w-[calc(100%+3rem)] h-px bg-gray-200 mt-3"></div>
+							</ModalHeader>
 							<ModalBody>
-								<p>Lead details will go here...</p>
+								<div className="grid grid-cols-2 gap-5 -mt-2">
+									<div className="flex flex-col col-span-2">
+										<p className="text-sm text-gray-700 font-sans">Lead Name</p>
+										<p className="text-xl font-semibold font-sans">
+											{lead.lead_name}
+										</p>
+									</div>
+									<div className="flex flex-col">
+										<p className="text-sm text-gray-700 font-sans">
+											Date Recieved
+										</p>
+										<p className="font-sans">{formattedTime}</p>
+									</div>
+									<div className="flex flex-col">
+										<p className="text-sm text-gray-700 font-sans">
+											Lead Phone
+										</p>
+										<p className="font-sans">{lead.lead_phone}</p>
+									</div>
+									<div className="flex flex-col col-span-2">
+										<p className="text-sm text-gray-700 font-sans">
+											Lead Address
+										</p>
+										<p className="font-sans">{lead.lead_address}</p>
+									</div>
+									<div className="flex flex-col">
+										<p className="text-sm text-gray-700 font-sans mb-1">
+											Payment Status
+										</p>
+										{statusObject()}
+									</div>
+									{lead.payment_status == "credited" && (
+										<div className="flex bg-red-50 col-span-2 rounded-md p-4 mt-2 border border-red-200 border-px">
+											<div className="grid grid-cols-2 gap-4 w-full">
+												<div className="flex items-center gap-1 col-span-2 mb-2">
+													<InformationCircleIcon className="w-5 h-5 text-red-900" />
+													<p className="text-red-900 text-medium font-semibold font-sans">
+														Credit Information
+													</p>
+												</div>
+												<div className="flex flex-col">
+													<p className="text-sm text-red-800 font-sans">
+														Credited Reason
+													</p>
+													<p className="font-sans text-red-900">
+														{reasonOptions.find(
+															(opt) =>
+																opt.value === lead.credited_reason
+														)?.label || lead.credited_reason}
+													</p>
+												</div>
+												<div className="flex flex-col">
+													<p className="text-sm text-red-800 font-sans">
+														Credited By
+													</p>
+													<p className="font-sans text-red-900">
+														{lead.credited_by || "N/A"}
+													</p>
+												</div>
+												<div className="flex flex-col col-span-2">
+													<p className="text-sm text-red-800 font-sans">
+														Credited At
+													</p>
+													<p className="font-sans text-red-900">
+														{lead.credited_at
+															? new Date(
+																	lead.credited_at
+															  ).toLocaleString("en-US", {
+																	timeZone: "America/New_York",
+																	year: "numeric",
+																	month: "2-digit",
+																	day: "2-digit",
+																	hour: "numeric",
+																	minute: "2-digit",
+																	hour12: true,
+															  })
+															: "N/A"}
+													</p>
+												</div>
+											</div>
+										</div>
+									)}
+								</div>
 							</ModalBody>
 							<ModalFooter>
 								<Button color="primary" onPress={onClose}>
@@ -169,20 +270,56 @@ export default function ClientLeadTableRow({
 				</ModalContent>
 			</Modal>
 
-			{/* Add Credit Modal */}
+			{/* Credit Lead Modal */}
 			<Modal isOpen={isCreditOpen} onOpenChange={onCreditOpenChange}>
 				<ModalContent>
 					{(onClose) => (
 						<>
 							<ModalHeader className="flex flex-col gap-1">Credit Lead</ModalHeader>
 							<ModalBody>
-								<p>Credit form will go here...</p>
+								<div className="flex flex-col gap-5 -mt-2">
+									<Select
+										label="Reason"
+										placeholder="Select a reason"
+										selectedKeys={reason ? [reason] : []}
+										onSelectionChange={(keys) => {
+											setReason(Array.from(keys)[0] as string)
+										}}
+										size="sm"
+									>
+										{reasonOptions.map((option) => (
+											<SelectItem key={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</Select>
+									<Textarea
+										label="Notes (Optional)"
+										placeholder="Additional explanation for audit trail..."
+										value={notes}
+										onValueChange={setNotes}
+										size="sm"
+										minRows={3}
+									/>
+									<Checkbox
+										isSelected={!notConfirmed}
+										onValueChange={() => setNotConfirmed(!notConfirmed)}
+										size="sm"
+									>
+										I confirm this adjustment is correct
+									</Checkbox>
+								</div>
 							</ModalBody>
 							<ModalFooter>
 								<Button color="danger" variant="light" onPress={onClose}>
 									Cancel
 								</Button>
-								<Button color="primary" onPress={() => handleCreditSubmit(onClose)}>
+								<Button
+									color="primary"
+									isDisabled={!reason || notConfirmed}
+									isLoading={isAdjusting}
+									onPress={() => handleCreditSubmit(onClose)}
+								>
 									Apply Credit
 								</Button>
 							</ModalFooter>

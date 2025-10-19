@@ -101,31 +101,7 @@ export async function getLeadsByClient(clientId: number) {
 export async function getTodaysLeads() {
   const supabase = createClient()
   
-  // Get today's date at midnight EST (UTC-5)
-  const now = new Date()
-  const estOffset = -5 * 60 // EST is UTC-5
-  const estDate = new Date(now.getTime() + (now.getTimezoneOffset() + estOffset) * 60000)
-  
-  // Set to midnight EST
-  estDate.setHours(0, 0, 0, 0)
-  
-  // Convert to UTC for the query
-  const startOfDayUTC = new Date(estDate.getTime() - estOffset * 60000).toISOString()
-  
-  // End of day EST
-  const endDate = new Date(estDate)
-  endDate.setHours(23, 59, 59, 999)
-  const endOfDayUTC = new Date(endDate.getTime() - estOffset * 60000).toISOString()
-
-  const { data, error } = await supabase
-    .from("leads")
-    .select(`
-      *,
-      client:clients(id, name)
-    `)
-    .gte("created_at", startOfDayUTC)
-    .lte("created_at", endOfDayUTC)
-    .order("created_at", { ascending: false })
+  const { data, error } = await supabase.rpc('get_todays_leads')
 
   if (error) {
     console.error("Error fetching today's leads:", error)

@@ -411,8 +411,10 @@ export default function ClientPage({ params }: ClientPageProps) {
 				<div className="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<ClientDashboardIcon
 						icon={ArrowTrendingUpIcon}
-						stats={true}
-						statsText=""
+						stats={false}
+						statsText={`Total lead${
+							stats.totalLeads > 1 || stats.totalLeads == 0 ? "s" : ""
+						} delivered`}
 						textcolor="text-black"
 						color1="bg-blue-100"
 						color2="text-blue-500"
@@ -448,7 +450,9 @@ export default function ClientPage({ params }: ClientPageProps) {
 					<ClientDashboardIcon
 						icon={CurrencyDollarIcon}
 						stats={false}
-						statsText="leads billed this month"
+						statsText={`Lead${
+							stats.netBillable > 1 || stats.netBillable == 0 ? "s" : ""
+						} marked as billable`}
 						textcolor="text-green-600"
 						color1="bg-green-100"
 						color2="text-green-500"
@@ -642,12 +646,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 							paginatedLeads.map((lead) => (
 								<ClientLeadTableRow
 									key={lead.id}
-									id={lead.id}
-									createdAt={lead.created_at}
-									leadName={lead.lead_name}
-									phone={lead.lead_phone}
-									address={lead.lead_address}
-									status={lead.payment_status}
+									lead={lead}
 									onLeadUpdated={onLeadUpdated}
 								/>
 							))

@@ -47,7 +47,7 @@ export default function ClientCardComponent({
 			<div className="col-span-4 row-span-1">
 				<div className="grid grid-cols-4 items-center">
 					<div className="col-span-3">
-						<span className="inline-flex items-center bg-blue-100 rounded-xl px-2.5 py-0.5 gap-1">
+						<span className="inline-flex items-center rounded-xl py-0.5 gap-1">
 							<ArrowTrendingUpIcon className="text-blue-700 h-4 w-4" />
 							<span className="text-blue-700 text-sm font-semibold font-sans truncate">
 								Leads Today
@@ -55,7 +55,7 @@ export default function ClientCardComponent({
 						</span>
 					</div>
 					<div className="flex justify-end items-center">
-						<span className="inline-flex items-center bg-blue-100 rounded-xl px-2.5 py-0.5">
+						<span className="inline-flex items-center rounded-xl px-2.5 py-0.5">
 							<span className="text-blue-700 text-sm font-semibold font-sans">
 								{leadsToday}
 							</span>
@@ -68,7 +68,7 @@ export default function ClientCardComponent({
 			<div className="col-span-4 row-span-1">
 				<div className="grid grid-cols-4 items-center">
 					<div className="col-span-3">
-						<span className="inline-flex items-center bg-red-100 rounded-xl px-2.5 py-0.5 gap-1">
+						<span className="inline-flex items-center rounded-xl py-0.5 gap-1">
 							<MinusCircleIcon className="text-red-700 h-4 w-4" />
 							<span className="text-red-700 text-sm font-semibold font-sans truncate">
 								Credited
@@ -76,7 +76,7 @@ export default function ClientCardComponent({
 						</span>
 					</div>
 					<div className="flex justify-end items-center">
-						<span className="inline-flex items-center bg-red-100 rounded-xl px-2.5 py-0.5">
+						<span className="inline-flex items-center rounded-xl px-2.5 py-0.5">
 							<span className="text-red-700 text-sm font-semibold font-sans">
 								{credited}
 							</span>

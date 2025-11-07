@@ -200,13 +200,6 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "leads_credited_by_fkey"
-            columns: ["credited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       profiles: {
@@ -246,58 +239,60 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_client_credits: {
+        Args: {
+          p_additional_notes?: string
+          p_adjusted_by?: string
+          p_client_id: number
+          p_credit_amount: number
+          p_reason?: string
+        }
+        Returns: undefined
+      }
       find_client_by_name: {
         Args: { client_name_input: string }
         Returns: number
       }
-      issue_credit_to_client: {
+      generate_daily_report: { Args: never; Returns: undefined }
+      get_todays_leads: {
+        Args: never
+        Returns: {
+          additional_info: string
+          client: Json
+          client_id: number
+          created_at: string
+          credited_at: string
+          credited_by: string
+          credited_reason: string
+          id: number
+          lead_address: string
+          lead_name: string
+          lead_phone: string
+          payment_status: string
+          updated_at: string
+        }[]
+      }
+      issue_credit_to_lead: {
         Args: {
           p_additional_notes?: string
           p_adjusted_by?: string
           p_credit_amount: number
           p_lead_id: number
+          p_reason?: string
+        }
+        Returns: undefined
+      }
+      issue_credits_to_client: {
+        Args: {
+          p_additional_notes?: string
+          p_adjusted_by?: string
+          p_client_id: number
+          p_credit_amount: number
           p_reason: string
         }
         Returns: undefined
       }
-      issue_credit_to_lead: {
-        Args:
-          | {
-              p_additional_notes?: string
-              p_adjusted_by?: string
-              p_credit_amount: number
-              p_lead_id: number
-              p_reason: string
-            }
-          | {
-              p_adjusted_by?: string
-              p_credit_amount: number
-              p_lead_id: number
-              p_reason?: string
-            }
-        Returns: undefined
-      }
-      issue_credits_to_client: {
-        Args:
-          | {
-              p_additional_notes?: string
-              p_adjusted_by?: string
-              p_client_id: number
-              p_credit_amount: number
-              p_reason: string
-            }
-          | {
-              p_adjusted_by?: string
-              p_client_id: number
-              p_credit_amount: number
-              p_reason?: string
-            }
-        Returns: undefined
-      }
-      reset_daily_lead_counters: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      reset_daily_lead_counters: { Args: never; Returns: undefined }
     }
     Enums: {
       user_role: "admin" | "client"

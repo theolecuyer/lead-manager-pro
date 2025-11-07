@@ -26,7 +26,7 @@ export type Lead = Database["public"]["Tables"]["leads"]["Row"]
 export default function AdminDashboard() {
 	const { user, profile, loading } = useAuth()
 	const [search, setSearch] = useState("")
-	const [sortBy, setSortBy] = useState("name")
+	const [sortBy, setSortBy] = useState("leads")
 	const [isOpen, setIsOpen] = useState(false)
 	const [currentClientPage, setCurrentClientPage] = useState(1)
 	const [itemsPerClientPage, setItemsPerClientPage] = useState(8)
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
 					<DashboardIcon
 						icon={UserGroupIcon}
 						stats={false}
-						statsText="recieved leads today"
+						statsText="recieved leads yesterday"
 						textcolor="text-black"
 						color1="bg-purple-100"
 						color2="text-purple-500"

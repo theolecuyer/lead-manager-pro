@@ -52,6 +52,13 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 		{ value: "other", label: "Other" },
 	]
 
+	const formattedAddress =
+		lead.lead_address == null
+			? ""
+			: lead.lead_address.split(",").length > 2
+			? lead.lead_address.split(",")[0] + ", " + lead.lead_address.split(",")[1]
+			: lead.lead_address
+
 	const handleClientClick = () => {
 		router.push(`/admin/clients/${clientId}`)
 	}
@@ -212,7 +219,7 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 										<p className="text-sm text-gray-700 font-sans">
 											Lead Address
 										</p>
-										<p className="font-sans">{lead.lead_address}</p>
+										<p className="font-sans">{formattedAddress}</p>
 									</div>
 									{lead.additional_info && (
 										<div className="flex flex-col col-span-2">

@@ -59,6 +59,13 @@ export default function ClientLeadTableRow({ lead, onLeadUpdated }: LeadCardProp
 		onCreditOpen()
 	}
 
+	const formattedAddress =
+		lead.lead_address == null
+			? ""
+			: lead.lead_address.split(",").length > 2
+			? lead.lead_address.split(",")[0] + ", " + lead.lead_address.split(",")[1]
+			: lead.lead_address
+
 	const handleCreditSubmit = async (onClose: () => void) => {
 		if (!reason || notConfirmed) return
 
@@ -140,8 +147,8 @@ export default function ClientLeadTableRow({ lead, onLeadUpdated }: LeadCardProp
 					{lead.lead_name}
 				</p>
 				<p className="text-small font-sans font-medium text-gray-700">{lead.lead_phone}</p>
-				<p className="text-small font-sans font-medium text-gray-600">
-					{lead.lead_address}
+				<p className="text-small font-sans font-medium text-gray-600 pr-2">
+					{formattedAddress}
 				</p>
 				{statusObject()}
 				<div className="flex gap-10 justify-end mr-2">
@@ -199,8 +206,16 @@ export default function ClientLeadTableRow({ lead, onLeadUpdated }: LeadCardProp
 										<p className="text-sm text-gray-700 font-sans">
 											Lead Address
 										</p>
-										<p className="font-sans">{lead.lead_address}</p>
+										<p className="font-sans">{formattedAddress}</p>
 									</div>
+									{lead.additional_info && (
+										<div className="flex flex-col col-span-2">
+											<p className="text-sm text-gray-700 font-sans">
+												Additional Info
+											</p>
+											<p className="font-sans">{lead.additional_info}</p>
+										</div>
+									)}
 									<div className="flex flex-col">
 										<p className="text-sm text-gray-700 font-sans mb-1">
 											Payment Status

@@ -290,8 +290,10 @@ export default function AdminDashboard() {
 							CLIENT
 						</p>
 						<p className="text-small font-sans font-medium text-gray-600">LEAD NAME</p>
-						<p className="text-small font-sans font-medium text-gray-600">PHONE</p>
 						<p className="text-small font-sans font-medium text-gray-600">TIME</p>
+						<p className="text-small font-sans font-medium text-gray-600 -ml-[15%]">
+							PRODUCT
+						</p>
 						<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
 						<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
 							ACTIONS

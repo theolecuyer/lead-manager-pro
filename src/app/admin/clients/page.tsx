@@ -201,11 +201,13 @@ export default function AdminClients() {
 				</div>
 				<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
 					<p className="text-small font-sans font-medium text-gray-600 ml-2">CLIENT</p>
-					<p className="text-small font-sans font-medium text-gray-600">CONTACT</p>
-					<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
+					<p className="text-small font-sans font-medium text-gray-600 ml-2">STATUS</p>
 					<p className="text-small font-sans font-medium text-gray-600">TOTAL LEADS</p>
 					<p className="text-small font-sans font-medium text-gray-600">TODAY</p>
 					<p className="text-small font-sans font-medium text-gray-600">CREDITS</p>
+					<p className="text-small font-sans font-medium text-gray-600">
+						LIFETIME REVENUE
+					</p>
 				</div>
 				<div className="flex flex-col -mx-5">
 					{paginatedClients.length > 0 ? (

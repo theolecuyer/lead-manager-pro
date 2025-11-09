@@ -48,8 +48,8 @@ export default function ClientCardComponent({
 				<div className="grid grid-cols-4 items-center">
 					<div className="col-span-3">
 						<span className="inline-flex items-center rounded-xl py-0.5 gap-1">
-							<ArrowTrendingUpIcon className="text-blue-700 h-4 w-4" />
-							<span className="text-blue-700 text-sm font-semibold font-sans truncate">
+							<ArrowTrendingUpIcon className="text-blue-700 h-3 w-3" />
+							<span className="text-sm font-semibold font-sans truncate">
 								Leads Today
 							</span>
 						</span>
@@ -69,8 +69,8 @@ export default function ClientCardComponent({
 				<div className="grid grid-cols-4 items-center">
 					<div className="col-span-3">
 						<span className="inline-flex items-center rounded-xl py-0.5 gap-1">
-							<MinusCircleIcon className="text-red-700 h-4 w-4" />
-							<span className="text-red-700 text-sm font-semibold font-sans truncate">
+							<MinusCircleIcon className="text-red-700 h-3 w-3" />
+							<span className="text-sm font-semibold font-sans truncate">
 								Credited
 							</span>
 						</span>

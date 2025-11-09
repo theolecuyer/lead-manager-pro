@@ -1,8 +1,10 @@
 "use client"
 
 import { issueCreditToLead } from "@/lib/supabase/credits"
+import { getAllProducts } from "@/lib/supabase/products"
+import { updateLeadProduct } from "@/lib/supabase/leads"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
 	Modal,
 	ModalContent,
@@ -17,7 +19,10 @@ import {
 	Checkbox,
 } from "@heroui/react"
 import type { Lead } from "@/app/admin/dashboard/page"
+import { Database } from "@/lib/supabase/database.types"
 import { InformationCircleIcon } from "@heroicons/react/24/solid"
+
+type Product = Database["public"]["Tables"]["products"]["Row"]
 
 export type LeadCardProps = {
 	lead: Lead
@@ -31,6 +36,9 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 	const [notes, setNotes] = useState("")
 	const [isAdjusting, setIsAdjusting] = useState(false)
 	const [notConfirmed, setNotConfirmed] = useState(true)
+	const [selectedProduct, setSelectedProduct] = useState<number | null>(lead.product_id || null)
+	const [products, setProducts] = useState<Product[]>([])
+	const [isLoadingProducts, setIsLoadingProducts] = useState(true)
 	const router = useRouter()
 	const {
 		isOpen: isViewOpen,
@@ -52,6 +60,21 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 		{ value: "other", label: "Other" },
 	]
 
+	// Fetch products on component mount
+	useEffect(() => {
+		async function fetchProducts() {
+			try {
+				const fetchedProducts = await getAllProducts()
+				setProducts(fetchedProducts)
+			} catch (error) {
+				console.error("Error fetching products:", error)
+			} finally {
+				setIsLoadingProducts(false)
+			}
+		}
+		fetchProducts()
+	}, [])
+
 	const formattedAddress =
 		lead.lead_address == null
 			? ""
@@ -69,6 +92,22 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 
 	const handleCredit = async () => {
 		onCreditOpen()
+	}
+
+	const handleProductChange = async (keys: any) => {
+		const newProductId = Number(Array.from(keys)[0])
+		setSelectedProduct(newProductId)
+
+		// Update product in database
+		try {
+			await updateLeadProduct(lead.id, newProductId)
+			console.log("Product updated successfully")
+			onLeadUpdated?.()
+		} catch (error) {
+			console.error("Error updating product:", error)
+			alert("Failed to update product")
+			setSelectedProduct(lead.product_id || null)
+		}
 	}
 
 	const handleCreditSubmit = async (onClose: () => void) => {
@@ -151,6 +190,8 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 		  })
 		: "-"
 
+	const selectedProductData = products.find((p) => p.id === selectedProduct)
+
 	return (
 		<>
 			<div className="grid grid-cols-6 border-y border-gray-100 grid-rows-1 p-3 px-5 items-center">
@@ -161,8 +202,32 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 					{clientName}
 				</button>
 				<p className="text-small font-sans font-medium text-gray-700"> {lead.lead_name}</p>
-				<p className="text-small font-sans font-medium text-gray-700">{lead.lead_phone}</p>
 				<p className="text-small font-sans font-medium text-gray-600">{formattedTime}</p>
+				<div className="pr-[25%] -ml-[15%]">
+					<Select
+						size="sm"
+						selectedKeys={selectedProduct ? [selectedProduct.toString()] : []}
+						onSelectionChange={handleProductChange}
+						placeholder="Select product"
+						aria-label="Product"
+						isDisabled={isLoadingProducts}
+						classNames={{
+							trigger: "min-h-8 h-8 bg-white",
+							value: "text-small font-sans font-medium text-gray-700",
+						}}
+					>
+						{products.map((product) => (
+							<SelectItem
+								key={product.id}
+								classNames={{
+									base: "bg-white hover:bg-gray-100",
+								}}
+							>
+								{product.name}
+							</SelectItem>
+						))}
+					</Select>
+				</div>
 				{statusObject()}
 				<div className="flex gap-10 justify-end mr-2">
 					<button
@@ -221,6 +286,20 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 										</p>
 										<p className="font-sans">{formattedAddress}</p>
 									</div>
+									<div className="flex flex-col">
+										<p className="text-sm text-gray-700 font-sans">Product</p>
+										<p className="font-sans">
+											{selectedProductData?.name || "Not selected"}
+										</p>
+									</div>
+									{selectedProductData && (
+										<div className="flex flex-col">
+											<p className="text-sm text-gray-700 font-sans">Price</p>
+											<p className="font-sans">
+												${Number(selectedProductData.price).toFixed(2)}
+											</p>
+										</div>
+									)}
 									{lead.additional_info && (
 										<div className="flex flex-col col-span-2">
 											<p className="text-sm text-gray-700 font-sans">
@@ -316,7 +395,12 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 										size="sm"
 									>
 										{reasonOptions.map((option) => (
-											<SelectItem key={option.value}>
+											<SelectItem
+												key={option.value}
+												classNames={{
+													base: "bg-white hover:bg-gray-100",
+												}}
+											>
 												{option.label}
 											</SelectItem>
 										))}

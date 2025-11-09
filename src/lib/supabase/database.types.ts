@@ -162,6 +162,7 @@ export type Database = {
           lead_name: string | null
           lead_phone: string | null
           payment_status: string
+          product_id: number | null
           updated_at: string | null
         }
         Insert: {
@@ -176,6 +177,7 @@ export type Database = {
           lead_name?: string | null
           lead_phone?: string | null
           payment_status?: string
+          product_id?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -190,6 +192,7 @@ export type Database = {
           lead_name?: string | null
           lead_phone?: string | null
           payment_status?: string
+          product_id?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -200,7 +203,41 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "leads_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: never
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: never
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

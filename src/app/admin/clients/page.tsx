@@ -222,6 +222,7 @@ export default function AdminClients() {
 								totalLeads={client.total_leads_count}
 								today={client.leads_received_today}
 								credits={client.credit_balance}
+								lifetime_revenue={client.lifetime_revenue}
 							/>
 						))
 					) : (

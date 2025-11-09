@@ -94,6 +94,10 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 		onCreditOpen()
 	}
 
+	const isProductEditable = () => {
+		return lead.payment_status === "billable" && lead.report_id === null
+	}
+
 	const handleProductChange = async (keys: any) => {
 		const newProductId = Number(Array.from(keys)[0])
 		setSelectedProduct(newProductId)
@@ -210,7 +214,7 @@ export default function LeadTableRow({ lead, clientId, clientName, onLeadUpdated
 						onSelectionChange={handleProductChange}
 						placeholder="Select product"
 						aria-label="Product"
-						isDisabled={isLoadingProducts}
+						isDisabled={isLoadingProducts || !isProductEditable()}
 						classNames={{
 							trigger: "min-h-8 h-8 bg-white",
 							value: "text-small font-sans font-medium text-gray-700",

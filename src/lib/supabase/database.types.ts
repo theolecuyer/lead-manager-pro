@@ -25,6 +25,7 @@ export type Database = {
           last_reset_date: string | null
           leads_paid_today: number
           leads_received_today: number
+          lifetime_revenue: number
           name: string | null
           phone: string | null
           total_leads_count: number
@@ -40,6 +41,7 @@ export type Database = {
           last_reset_date?: string | null
           leads_paid_today?: number
           leads_received_today?: number
+          lifetime_revenue?: number
           name?: string | null
           phone?: string | null
           total_leads_count?: number
@@ -55,6 +57,7 @@ export type Database = {
           last_reset_date?: string | null
           leads_paid_today?: number
           leads_received_today?: number
+          lifetime_revenue?: number
           name?: string | null
           phone?: string | null
           total_leads_count?: number
@@ -163,6 +166,7 @@ export type Database = {
           lead_phone: string | null
           payment_status: string
           product_id: number | null
+          report_id: number | null
           updated_at: string | null
         }
         Insert: {
@@ -178,6 +182,7 @@ export type Database = {
           lead_phone?: string | null
           payment_status?: string
           product_id?: number | null
+          report_id?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -193,6 +198,7 @@ export type Database = {
           lead_phone?: string | null
           payment_status?: string
           product_id?: number | null
+          report_id?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -208,6 +214,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
             referencedColumns: ["id"]
           },
         ]
@@ -306,6 +319,9 @@ export type Database = {
           lead_name: string
           lead_phone: string
           payment_status: string
+          product: Json
+          product_id: number
+          report_id: number
           updated_at: string
         }[]
       }

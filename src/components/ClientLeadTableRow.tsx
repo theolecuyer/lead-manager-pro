@@ -81,6 +81,10 @@ export default function ClientLeadTableRow({ lead, onLeadUpdated }: LeadCardProp
 		onCreditOpen()
 	}
 
+	const isProductEditable = () => {
+		return lead.payment_status === "billable" && lead.report_id === null
+	}
+
 	const handleProductChange = async (keys: any) => {
 		const newProductId = Number(Array.from(keys)[0])
 		setSelectedProduct(newProductId)
@@ -189,14 +193,14 @@ export default function ClientLeadTableRow({ lead, onLeadUpdated }: LeadCardProp
 				<p className="text-small font-sans font-medium text-gray-600 pr-2">
 					{formattedAddress}
 				</p>
-				<div className="pr-4 ml-[15%]">
+				<div className="ml-[15%]">
 					<Select
 						size="sm"
 						selectedKeys={selectedProduct ? [selectedProduct.toString()] : []}
 						onSelectionChange={handleProductChange}
 						placeholder="Select product"
 						aria-label="Product"
-						isDisabled={isLoadingProducts}
+						isDisabled={isLoadingProducts || !isProductEditable()}
 						classNames={{
 							trigger: "min-h-8 h-8 bg-white",
 							value: "text-small font-sans font-medium text-gray-700",
@@ -298,7 +302,7 @@ export default function ClientLeadTableRow({ lead, onLeadUpdated }: LeadCardProp
 										<p className="text-sm text-gray-700 font-sans mb-1">
 											Payment Status
 										</p>
-										{statusObject()}
+										<div className="-ml-[25%]">{statusObject()}</div>
 									</div>
 									{lead.payment_status == "credited" && (
 										<div className="flex bg-red-50 col-span-2 rounded-md p-4 mt-2 border border-red-200 border-px">

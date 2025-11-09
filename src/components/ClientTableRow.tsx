@@ -12,6 +12,7 @@ export type ClientTableProps = {
 	totalLeads?: number
 	today?: number
 	credits?: number
+	lifetime_revenue?: number
 }
 
 export default function ClientTableRow({
@@ -23,6 +24,7 @@ export default function ClientTableRow({
 	totalLeads,
 	today,
 	credits,
+	lifetime_revenue,
 }: ClientTableProps) {
 	const router = useRouter()
 	const handleClientClick = () => {
@@ -82,7 +84,7 @@ export default function ClientTableRow({
 				<p className="text-xs">today</p>
 			</div>
 			<p className={`text-medium font-sans font-semibold ${creditColor}`}>{credits}</p>
-			<p className="text-small font-sans font-medium text-gray-700"> {phone}</p>
+			<p className="text-medium font-sans font-semibold">${lifetime_revenue}</p>
 		</div>
 	)
 }

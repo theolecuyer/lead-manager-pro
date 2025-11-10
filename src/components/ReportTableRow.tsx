@@ -30,11 +30,13 @@ export default function ReportTableRow({
 	// Format date helper
 	function formatDate(dateString?: string) {
 		if (!dateString) return "--"
-		const date = new Date(dateString)
 
-		const month = date.toLocaleDateString("en-US", { month: "long" })
-		const day = date.getDate()
-		const year = date.getFullYear()
+		const [year, month, day] = dateString.split("-").map(Number)
+		const date = new Date(year, month - 1, day)
+
+		const monthName = date.toLocaleDateString("en-US", { month: "long" })
+		const dayNum = date.getDate()
+		const yearNum = date.getFullYear()
 
 		const getOrdinal = (n: number) => {
 			const s = ["th", "st", "nd", "rd"]
@@ -42,7 +44,7 @@ export default function ReportTableRow({
 			return s[(v - 20) % 10] || s[v] || s[0]
 		}
 
-		return `${month} ${day}${getOrdinal(day)}, ${year}`
+		return `${monthName} ${dayNum}${getOrdinal(dayNum)}, ${yearNum}`
 	}
 
 	const formattedDate = formatDate(reportDate)

@@ -14,7 +14,7 @@ import BreadcrumbHeader from "@/components/BreadcrumbHeader"
 export default function AdminClients() {
 	const { user, profile, loading } = useAuth()
 	const [search, setSearch] = useState("")
-	const [sortBy, setSortBy] = useState("name")
+	const [sortBy, setSortBy] = useState("leads_today")
 	const [isSortOpen, setIsSortOpen] = useState(false)
 	const [statusFilter, setStatusFilter] = useState("all")
 	const [isStatusOpen, setIsStatusOpen] = useState(false)
@@ -26,7 +26,8 @@ export default function AdminClients() {
 
 	const sortOptions = [
 		{ value: "name", label: "Sort by Name (A-Z)" },
-		{ value: "leads", label: "Sort by Leads" },
+		{ value: "leads_today", label: "Sort by Today's Leads" },
+		{ value: "leads_total", label: "Sort by Total Leads" },
 		{ value: "credits", label: "Sort by Credits" },
 	]
 
@@ -77,8 +78,10 @@ export default function AdminClients() {
 			switch (sortBy) {
 				case "name":
 					return (a.name || "").localeCompare(b.name || "")
-				case "leads":
+				case "leads_today":
 					return b.leads_received_today - a.leads_received_today
+				case "leads_total":
+					return b.total_leads_count - a.total_leads_count
 				case "credits":
 					return b.credit_balance - a.credit_balance
 				default:
@@ -198,11 +201,13 @@ export default function AdminClients() {
 				</div>
 				<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
 					<p className="text-small font-sans font-medium text-gray-600 ml-2">CLIENT</p>
-					<p className="text-small font-sans font-medium text-gray-600">CONTACT</p>
-					<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
+					<p className="text-small font-sans font-medium text-gray-600 ml-2">STATUS</p>
 					<p className="text-small font-sans font-medium text-gray-600">TOTAL LEADS</p>
 					<p className="text-small font-sans font-medium text-gray-600">TODAY</p>
 					<p className="text-small font-sans font-medium text-gray-600">CREDITS</p>
+					<p className="text-small font-sans font-medium text-gray-600">
+						LIFETIME REVENUE
+					</p>
 				</div>
 				<div className="flex flex-col -mx-5">
 					{paginatedClients.length > 0 ? (
@@ -217,6 +222,7 @@ export default function AdminClients() {
 								totalLeads={client.total_leads_count}
 								today={client.leads_received_today}
 								credits={client.credit_balance}
+								lifetime_revenue={client.lifetime_revenue}
 							/>
 						))
 					) : (

@@ -25,6 +25,7 @@ export type Database = {
           last_reset_date: string | null
           leads_paid_today: number
           leads_received_today: number
+          lifetime_revenue: number
           name: string | null
           phone: string | null
           total_leads_count: number
@@ -40,6 +41,7 @@ export type Database = {
           last_reset_date?: string | null
           leads_paid_today?: number
           leads_received_today?: number
+          lifetime_revenue?: number
           name?: string | null
           phone?: string | null
           total_leads_count?: number
@@ -55,6 +57,7 @@ export type Database = {
           last_reset_date?: string | null
           leads_paid_today?: number
           leads_received_today?: number
+          lifetime_revenue?: number
           name?: string | null
           phone?: string | null
           total_leads_count?: number
@@ -162,6 +165,8 @@ export type Database = {
           lead_name: string | null
           lead_phone: string | null
           payment_status: string
+          product_id: number | null
+          report_id: number | null
           updated_at: string | null
         }
         Insert: {
@@ -176,6 +181,8 @@ export type Database = {
           lead_name?: string | null
           lead_phone?: string | null
           payment_status?: string
+          product_id?: number | null
+          report_id?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -190,6 +197,8 @@ export type Database = {
           lead_name?: string | null
           lead_phone?: string | null
           payment_status?: string
+          product_id?: number | null
+          report_id?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -201,13 +210,47 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "leads_credited_by_fkey"
-            columns: ["credited_by"]
+            foreignKeyName: "leads_product_id_fkey"
+            columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: never
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: never
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -246,58 +289,63 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_client_credits: {
+        Args: {
+          p_additional_notes?: string
+          p_adjusted_by?: string
+          p_client_id: number
+          p_credit_amount: number
+          p_reason?: string
+        }
+        Returns: undefined
+      }
       find_client_by_name: {
         Args: { client_name_input: string }
         Returns: number
       }
-      issue_credit_to_client: {
+      generate_daily_report: { Args: never; Returns: undefined }
+      get_todays_leads: {
+        Args: never
+        Returns: {
+          additional_info: string
+          client: Json
+          client_id: number
+          created_at: string
+          credited_at: string
+          credited_by: string
+          credited_reason: string
+          id: number
+          lead_address: string
+          lead_name: string
+          lead_phone: string
+          payment_status: string
+          product: Json
+          product_id: number
+          report_id: number
+          updated_at: string
+        }[]
+      }
+      issue_credit_to_lead: {
         Args: {
           p_additional_notes?: string
           p_adjusted_by?: string
           p_credit_amount: number
           p_lead_id: number
+          p_reason?: string
+        }
+        Returns: undefined
+      }
+      issue_credits_to_client: {
+        Args: {
+          p_additional_notes?: string
+          p_adjusted_by?: string
+          p_client_id: number
+          p_credit_amount: number
           p_reason: string
         }
         Returns: undefined
       }
-      issue_credit_to_lead: {
-        Args:
-          | {
-              p_additional_notes?: string
-              p_adjusted_by?: string
-              p_credit_amount: number
-              p_lead_id: number
-              p_reason: string
-            }
-          | {
-              p_adjusted_by?: string
-              p_credit_amount: number
-              p_lead_id: number
-              p_reason?: string
-            }
-        Returns: undefined
-      }
-      issue_credits_to_client: {
-        Args:
-          | {
-              p_additional_notes?: string
-              p_adjusted_by?: string
-              p_client_id: number
-              p_credit_amount: number
-              p_reason: string
-            }
-          | {
-              p_adjusted_by?: string
-              p_client_id: number
-              p_credit_amount: number
-              p_reason?: string
-            }
-        Returns: undefined
-      }
-      reset_daily_lead_counters: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      reset_daily_lead_counters: { Args: never; Returns: undefined }
     }
     Enums: {
       user_role: "admin" | "client"

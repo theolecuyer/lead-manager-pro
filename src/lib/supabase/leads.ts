@@ -12,6 +12,7 @@ export interface CreateLeadInput {
   lead_phone?: string
   lead_address?: string
   additional_info?: string
+  product_id?: number
 }
 
 export async function createNewLead(input: CreateLeadInput) {
@@ -23,6 +24,7 @@ export async function createNewLead(input: CreateLeadInput) {
     lead_phone: input.lead_phone || null,
     lead_address: input.lead_address || null,
     additional_info: input.additional_info || null,
+    product_id: input.product_id || null,
   }
 
   const { data, error } = await supabase
@@ -48,7 +50,8 @@ export async function getAllLeads() {
     .from("leads")
     .select(`
       *,
-      client:clients(id, name, email, phone)
+      client:clients(id, name, email, phone),
+      product:products(id, name, price)
     `)
     .order("created_at", { ascending: false })
 
@@ -68,6 +71,7 @@ export async function getLeadById(leadId: number) {
     .select(`
       *,
       client:clients(id, name, email, phone),
+      product:products(id, name, price),
       credited_by_profile:profiles(id, full_name, username)
     `)
     .eq("id", leadId)
@@ -196,4 +200,22 @@ export async function getTodaysCreditedLeads() {
   }
 
   return data
+}
+
+export async function updateLeadProduct(leadId: number, productId: number) {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from("leads")
+    .update({ product_id: productId })
+    .eq("id", leadId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating lead product:", error)
+    throw new Error(error.message)
+  }
+
+  return data as Lead
 }

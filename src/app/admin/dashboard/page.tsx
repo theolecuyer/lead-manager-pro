@@ -19,6 +19,7 @@ import { getAllClients } from "@/lib/supabase/clients"
 import { Database } from "@/lib/supabase/database.types"
 import { getTodaysLeads } from "@/lib/supabase/leads"
 import LeadTableRow from "@/components/LeadTableRow"
+import { getYesterdaysReport } from "@/lib/supabase/reports"
 
 export type Client = Database["public"]["Tables"]["clients"]["Row"]
 export type Lead = Database["public"]["Tables"]["leads"]["Row"]
@@ -26,7 +27,7 @@ export type Lead = Database["public"]["Tables"]["leads"]["Row"]
 export default function AdminDashboard() {
 	const { user, profile, loading } = useAuth()
 	const [search, setSearch] = useState("")
-	const [sortBy, setSortBy] = useState("name")
+	const [sortBy, setSortBy] = useState("leads")
 	const [isOpen, setIsOpen] = useState(false)
 	const [currentClientPage, setCurrentClientPage] = useState(1)
 	const [itemsPerClientPage, setItemsPerClientPage] = useState(8)
@@ -36,6 +37,7 @@ export default function AdminDashboard() {
 	const [isLoadingClients, setIsLoadingClients] = useState(true)
 	const dropdownRef = useRef<HTMLDivElement>(null)
 	const [todaysLeads, setTodaysLeads] = useState<any[]>([])
+	const [yesterdaysReport, setYesterdaysReport] = useState<any>(null)
 
 	const sortOptions = [
 		{ value: "name", label: "Sort by Name" },
@@ -63,14 +65,16 @@ export default function AdminDashboard() {
 		async function fetchData() {
 			try {
 				setIsLoadingClients(true)
-				const [clientData, leadData] = await Promise.all([
+				const [clientData, leadData, yesterdayReport] = await Promise.all([
 					getAllClients(),
 					getTodaysLeads(),
+					getYesterdaysReport(),
 				])
 				console.log("Today's leads:", leadData) // Add this
 				console.log("Lead count:", leadData.length) // Add this
 				setClients(clientData)
 				setTodaysLeads(leadData)
+				setYesterdaysReport(yesterdayReport)
 			} catch (error) {
 				console.error("Error fetching dashboard data:", error)
 			} finally {
@@ -164,7 +168,7 @@ export default function AdminDashboard() {
 						color1="bg-blue-100"
 						color2="text-blue-500"
 						numToday={leadsToday}
-						comparison={8}
+						comparison={yesterdaysReport?.total_leads ?? 0}
 						comparisonTime="from yesterday"
 						title="Leads Delivered Today"
 					/>
@@ -176,7 +180,7 @@ export default function AdminDashboard() {
 						color1="bg-red-100"
 						color2="text-red-500"
 						numToday={creditsToday}
-						comparison={12}
+						comparison={0}
 						comparisonTime=""
 						title="Credits Issued Today"
 					/>
@@ -188,19 +192,19 @@ export default function AdminDashboard() {
 						color1="bg-green-100"
 						color2="text-green-500"
 						numToday={billedToday}
-						comparison={8}
+						comparison={0}
 						comparisonTime=""
 						title="Net Billable Leads"
 					/>
 					<DashboardIcon
 						icon={UserGroupIcon}
 						stats={false}
-						statsText="recieved leads today"
+						statsText="recieved leads yesterday"
 						textcolor="text-black"
 						color1="bg-purple-100"
 						color2="text-purple-500"
 						numToday={totalClients}
-						comparison={6}
+						comparison={0}
 						comparisonTime=""
 						title="Active Clients"
 					/>
@@ -290,8 +294,10 @@ export default function AdminDashboard() {
 							CLIENT
 						</p>
 						<p className="text-small font-sans font-medium text-gray-600">LEAD NAME</p>
-						<p className="text-small font-sans font-medium text-gray-600">PHONE</p>
 						<p className="text-small font-sans font-medium text-gray-600">TIME</p>
+						<p className="text-small font-sans font-medium text-gray-600 -ml-[15%]">
+							PRODUCT
+						</p>
 						<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
 						<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
 							ACTIONS

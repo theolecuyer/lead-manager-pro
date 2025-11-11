@@ -21,7 +21,15 @@ type Difference = {
 }
 
 const calculateDiff = (numToday: number, numYesterday: number): Difference => {
-	const diff = ((numToday - numYesterday) / (numToday + numYesterday)) * 100
+	if (numYesterday === 0 && numToday === 0) {
+		return { icon: ArrowUpIcon, percentage: 0, sign: "", color: "text-gray-500" }
+	}
+	if (numYesterday === 0) {
+		return { icon: ArrowUpIcon, percentage: 100, sign: "+", color: "text-green-500" }
+	}
+
+	const diff = ((numToday - numYesterday) / numYesterday) * 100
+
 	if (diff >= 0) {
 		return { icon: ArrowUpIcon, percentage: diff, sign: "+", color: "text-green-500" }
 	} else {

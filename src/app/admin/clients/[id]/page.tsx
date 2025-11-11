@@ -634,9 +634,13 @@ export default function ClientPage({ params }: ClientPageProps) {
 						<p className="text-small font-sans font-medium text-gray-600 ml-[15%]">
 							LEAD NAME
 						</p>
-						<p className="text-small font-sans font-medium text-gray-600">PHONE</p>
 						<p className="text-small font-sans font-medium text-gray-600">ADDRESS</p>
-						<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
+						<p className="text-small font-sans font-medium text-gray-600 ml-[15%]">
+							PRODUCT
+						</p>
+						<p className="text-small font-sans font-medium text-gray-600 ml-[20%]">
+							STATUS
+						</p>
 						<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
 							ACTIONS
 						</p>

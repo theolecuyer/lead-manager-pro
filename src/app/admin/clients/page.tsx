@@ -235,7 +235,7 @@ export default function AdminClients() {
 						currentPage={currentClientPage}
 						totalPages={totalClientPages}
 						itemsPerPage={itemsPerClientPage}
-						totalItems={paginatedClients.length}
+						totalItems={filteredClients.length}
 						onPageChange={setCurrentClientPage}
 					/>
 				</div>

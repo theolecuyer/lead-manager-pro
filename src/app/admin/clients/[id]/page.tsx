@@ -435,9 +435,9 @@ export default function ClientPage({ params }: ClientPageProps) {
 						stats={false}
 						statsText="quality adjustments"
 						textcolor="text-black"
-						color1="bg-amber-100"
-						color2="text-amber-600"
-						borderColor="text-amber-500"
+						color1="bg-red-100"
+						color2="text-red-600"
+						borderColor="text-red-500"
 						numToday={stats.totalCredits}
 						comparison={12}
 						comparisonTime="from last month"

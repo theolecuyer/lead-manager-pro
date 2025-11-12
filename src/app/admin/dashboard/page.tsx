@@ -180,9 +180,9 @@ export default function AdminDashboard() {
 						stats={false}
 						statsText="poor quality leads"
 						textcolor="text-black"
-						color1="bg-amber-100"
-						color2="text-amber-600"
-						borderColor="text-amber-500"
+						color1="bg-red-100"
+						color2="text-red-600"
+						borderColor="text-red-500"
 						numToday={creditsToday}
 						comparison={0}
 						comparisonTime=""

@@ -7,6 +7,7 @@ export type DashboardIconProps = {
 	textcolor: string
 	color1: string
 	color2: string
+	borderColor: string
 	numToday: number
 	comparison: number
 	comparisonTime: string
@@ -41,7 +42,9 @@ export default function DashboardIcon(dashboardIconProps: DashboardIconProps) {
 	const diffObject = calculateDiff(dashboardIconProps.numToday, dashboardIconProps.comparison)
 
 	return (
-		<div className="bg-white p-5 rounded-md shadow grid grid-cols-4 ">
+		<div
+			className={`bg-white px-5 py-4 rounded-lg shadow grid grid-cols-4 border-l-4 ${dashboardIconProps.borderColor}`}
+		>
 			<div className="col-span-3">
 				<p className="text-xs sm:text-sm font-light font-sans whitespace-nowrap">
 					{dashboardIconProps.title}

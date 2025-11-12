@@ -168,7 +168,8 @@ export default function AdminDashboard() {
 						statsText=""
 						textcolor="text-black"
 						color1="bg-blue-100"
-						color2="text-blue-500"
+						color2="text-blue-600"
+						borderColor="text-blue-600"
 						numToday={leadsToday}
 						comparison={latestReport?.total_leads ?? 0}
 						comparisonTime="from last report"
@@ -179,8 +180,9 @@ export default function AdminDashboard() {
 						stats={false}
 						statsText="poor quality leads"
 						textcolor="text-black"
-						color1="bg-red-100"
-						color2="text-red-500"
+						color1="bg-amber-100"
+						color2="text-amber-600"
+						borderColor="text-amber-500"
 						numToday={creditsToday}
 						comparison={0}
 						comparisonTime=""
@@ -192,7 +194,8 @@ export default function AdminDashboard() {
 						statsText="ready to bill"
 						textcolor="text-green-600"
 						color1="bg-green-100"
-						color2="text-green-500"
+						color2="text-green-600"
+						borderColor="text-green-600"
 						numToday={billedToday}
 						comparison={0}
 						comparisonTime=""
@@ -204,7 +207,8 @@ export default function AdminDashboard() {
 						statsText="recieved leads yesterday"
 						textcolor="text-black"
 						color1="bg-purple-100"
-						color2="text-purple-500"
+						color2="text-purple-600"
+						borderColor="text-purple-600"
 						numToday={totalClients}
 						comparison={0}
 						comparisonTime=""

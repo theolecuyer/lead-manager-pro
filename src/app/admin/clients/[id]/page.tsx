@@ -417,7 +417,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 						} delivered`}
 						textcolor="text-black"
 						color1="bg-blue-100"
-						color2="text-blue-500"
+						color2="text-blue-600"
+						borderColor="text-blue-600"
 						numToday={stats.totalLeads}
 						comparison={8}
 						comparisonTime="from last month"
@@ -433,9 +434,10 @@ export default function ClientPage({ params }: ClientPageProps) {
 						icon={MinusCircleIcon}
 						stats={false}
 						statsText="quality adjustments"
-						textcolor="text-red-500"
+						textcolor="text-black"
 						color1="bg-red-100"
-						color2="text-red-500"
+						color2="text-red-600"
+						borderColor="text-red-500"
 						numToday={stats.totalCredits}
 						comparison={12}
 						comparisonTime="from last month"
@@ -455,7 +457,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 						} marked as billable`}
 						textcolor="text-green-600"
 						color1="bg-green-100"
-						color2="text-green-500"
+						color2="text-green-600"
+						borderColor="text-green-600"
 						numToday={stats.netBillable}
 						comparison={8}
 						comparisonTime="from last month"
@@ -473,7 +476,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 						statsText="available credits"
 						textcolor="text-purple-500"
 						color1="bg-purple-100"
-						color2="text-purple-500"
+						color2="text-purple-600"
+						borderColor="text-purple-600"
 						numToday={client.credit_balance}
 						comparison={0}
 						comparisonTime="from last month"

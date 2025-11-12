@@ -19,7 +19,7 @@ import { getAllClients } from "@/lib/supabase/clients"
 import { Database } from "@/lib/supabase/database.types"
 import { getTodaysLeads } from "@/lib/supabase/leads"
 import LeadTableRow from "@/components/LeadTableRow"
-import { getYesterdaysReport } from "@/lib/supabase/reports"
+import { getLatestReport } from "@/lib/supabase/reports"
 
 export type Client = Database["public"]["Tables"]["clients"]["Row"]
 export type Lead = Database["public"]["Tables"]["leads"]["Row"]
@@ -37,7 +37,8 @@ export default function AdminDashboard() {
 	const [isLoadingClients, setIsLoadingClients] = useState(true)
 	const dropdownRef = useRef<HTMLDivElement>(null)
 	const [todaysLeads, setTodaysLeads] = useState<any[]>([])
-	const [yesterdaysReport, setYesterdaysReport] = useState<any>(null)
+	const [latestReport, setLatestReport] = useState<any>(null)
+	const hasFetched = useRef(false)
 
 	const sortOptions = [
 		{ value: "name", label: "Sort by Name" },
@@ -63,18 +64,19 @@ export default function AdminDashboard() {
 
 	useEffect(() => {
 		async function fetchData() {
+			if (hasFetched.current) return
+
 			try {
 				setIsLoadingClients(true)
-				const [clientData, leadData, yesterdayReport] = await Promise.all([
+				const [clientData, leadData, latestReport] = await Promise.all([
 					getAllClients(),
 					getTodaysLeads(),
-					getYesterdaysReport(),
+					getLatestReport(),
 				])
-				console.log("Today's leads:", leadData) // Add this
-				console.log("Lead count:", leadData.length) // Add this
 				setClients(clientData)
 				setTodaysLeads(leadData)
-				setYesterdaysReport(yesterdayReport)
+				setLatestReport(latestReport)
+				hasFetched.current = true
 			} catch (error) {
 				console.error("Error fetching dashboard data:", error)
 			} finally {
@@ -166,10 +168,11 @@ export default function AdminDashboard() {
 						statsText=""
 						textcolor="text-black"
 						color1="bg-blue-100"
-						color2="text-blue-500"
+						color2="text-blue-600"
+						borderColor="text-blue-600"
 						numToday={leadsToday}
-						comparison={yesterdaysReport?.total_leads ?? 0}
-						comparisonTime="from yesterday"
+						comparison={latestReport?.total_leads ?? 0}
+						comparisonTime="from last report"
 						title="Leads Delivered Today"
 					/>
 					<DashboardIcon
@@ -178,7 +181,8 @@ export default function AdminDashboard() {
 						statsText="poor quality leads"
 						textcolor="text-black"
 						color1="bg-red-100"
-						color2="text-red-500"
+						color2="text-red-600"
+						borderColor="text-red-500"
 						numToday={creditsToday}
 						comparison={0}
 						comparisonTime=""
@@ -190,7 +194,8 @@ export default function AdminDashboard() {
 						statsText="ready to bill"
 						textcolor="text-green-600"
 						color1="bg-green-100"
-						color2="text-green-500"
+						color2="text-green-600"
+						borderColor="text-green-600"
 						numToday={billedToday}
 						comparison={0}
 						comparisonTime=""
@@ -202,7 +207,8 @@ export default function AdminDashboard() {
 						statsText="recieved leads yesterday"
 						textcolor="text-black"
 						color1="bg-purple-100"
-						color2="text-purple-500"
+						color2="text-purple-600"
+						borderColor="text-purple-600"
 						numToday={totalClients}
 						comparison={0}
 						comparisonTime=""

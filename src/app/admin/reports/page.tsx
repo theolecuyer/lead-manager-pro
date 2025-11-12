@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import BreadcrumbHeader from "@/components/BreadcrumbHeader"
 import { Database } from "@/lib/supabase/database.types"
 import { useAuth } from "@/providers/AuthProvider"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { getAllReports } from "@/lib/supabase/reports"
 import Pagination from "@/components/Pagination"
 import ReportTableRow from "@/components/ReportTableRow"
@@ -18,17 +18,21 @@ export default function AdminReports() {
 	const [isLoading, setIsLoading] = useState(true)
 	const [currentPage, setCurrentPage] = useState(1)
 	const [itemsPerPage, setItemsPerPage] = useState(10)
+	const hasFetched = useRef(false)
 
 	useEffect(() => {
 		if (!loading && !user) redirect("/login")
 	}, [user, loading])
 
 	useEffect(() => {
+		if (hasFetched.current) return
+
 		async function fetchReports() {
 			try {
 				setIsLoading(true)
 				const data = await getAllReports()
 				setReports(data)
+				hasFetched.current = true
 			} catch (error) {
 				console.error("Error fetching reports:", error)
 			} finally {

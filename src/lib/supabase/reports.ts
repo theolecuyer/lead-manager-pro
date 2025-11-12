@@ -38,6 +38,24 @@ export async function getReportById(reportId: number) {
   return data as Report
 }
 
+export async function getLatestReport() {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from("daily_reports")
+    .select("*")
+    .order("report_date", { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error) {
+    console.error("Error fetching latest report:", error)
+    return null
+  }
+
+  return data as Report
+}
+
 export async function getYesterdaysReport() {
   const supabase = createClient()
   const yesterday = new Date()

@@ -71,9 +71,7 @@ export default function ClientTableRow({
 			onClick={handleClientClick}
 			className="grid grid-cols-6 border-y border-gray-100 grid-rows-1 p-3 px-5 items-center hover:bg-gray-100 hover:cursor-pointer transition-colors"
 		>
-			<p className="ml-2 flex justify-start text-medium font-sans font-semibold">
-				{clientName}
-			</p>
+			<p className="ml-2 flex justify-start text-sm font-semibold font-sans">{clientName}</p>
 			{statusObject()}
 			<div>
 				<p className="text-medium font-sans font-semibold">{totalLeads}</p>
@@ -84,7 +82,7 @@ export default function ClientTableRow({
 				<p className="text-xs">today</p>
 			</div>
 			<p className={`text-medium font-sans font-semibold ${creditColor}`}>{credits}</p>
-			<p className="text-medium font-sans font-semibold">${lifetime_revenue}</p>
+			<p className="text-medium font-sans">${lifetime_revenue}</p>
 		</div>
 	)
 }

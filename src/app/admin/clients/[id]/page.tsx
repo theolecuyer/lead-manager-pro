@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import React from "react"
 import AdminHeader from "@/components/AdminHeader"
 import { getClientById } from "@/lib/supabase/clients"
+import { updateClient } from "@/lib/supabase/clients"
 import type { Client } from "../../dashboard/page"
 import BreadcrumbHeader from "@/components/BreadcrumbHeader"
 import {
@@ -17,6 +18,7 @@ import {
 	SelectItem,
 	Textarea,
 	Checkbox,
+	Spinner,
 } from "@heroui/react"
 import {
 	Modal,
@@ -56,6 +58,25 @@ interface ClientPageProps {
 	params: Promise<{ id: string }>
 }
 
+function formatPhoneNumber(value: string): string {
+	// Remove all non-numeric characters
+	const cleaned = value.replace(/\D/g, "")
+
+	// Format as (XXX) XXX-XXXX
+	if (cleaned.length <= 3) {
+		return cleaned
+	} else if (cleaned.length <= 6) {
+		return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`
+	} else {
+		return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`
+	}
+}
+
+function validateEmail(email: string): boolean {
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+	return emailRegex.test(email)
+}
+
 export default function ClientPage({ params }: ClientPageProps) {
 	const { id } = React.use(params)
 	const clientId = parseInt(id)
@@ -77,6 +98,14 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const [reason, setReason] = useState("")
 	const [notes, setNotes] = useState("")
 	const [notConfirmed, setNotConfirmed] = useState(true)
+	const [editName, setEditName] = useState("")
+	const [editEmail, setEditEmail] = useState("")
+	const [editPhone, setEditPhone] = useState("")
+	const [editActive, setEditActive] = useState<boolean>(true)
+	const [isSavingClient, setIsSavingClient] = useState(false)
+	const [editNameError, setEditNameError] = useState("")
+	const [editEmailError, setEditEmailError] = useState("")
+	const [editPhoneError, setEditPhoneError] = useState("")
 
 	const statusOptions = [
 		{ value: "all", label: "Any Status" },
@@ -192,6 +221,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 			console.error("Error refreshing client data:", error)
 		}
 	}
+
 	const handleCopyEmail = () => {
 		if (client?.email) {
 			navigator.clipboard.writeText(client.email)
@@ -208,13 +238,70 @@ export default function ClientPage({ params }: ClientPageProps) {
 		}
 	}
 
-	if (isLoading) return <p className="text-center p-10">Loading client...</p>
+	useEffect(() => {
+		if (isOpen && client) {
+			setEditName(client.name ?? "")
+			setEditEmail(client.email ?? "")
+			setEditPhone(client.phone ? formatPhoneNumber(client.phone) : "")
+			setEditActive(client.active ?? true)
+			// Reset errors when modal opens
+			setEditNameError("")
+			setEditEmailError("")
+			setEditPhoneError("")
+		}
+	}, [isOpen, client])
 
-	if (!client) return null
+	async function handleSaveClient(onClose: () => void) {
+		if (!client) return
 
-	const netBillable = client.leads_paid_today
-	const credited = client.leads_received_today - client.leads_paid_today
+		// Reset errors
+		setEditNameError("")
+		setEditEmailError("")
+		setEditPhoneError("")
 
+		let hasError = false
+
+		// Validate name
+		if (!editName || editName.trim().length === 0) {
+			setEditNameError("Client name is required")
+			hasError = true
+		}
+
+		// Validate email if provided
+		if (editEmail && editEmail.trim().length > 0 && !validateEmail(editEmail.trim())) {
+			setEditEmailError("Please enter a valid email address")
+			hasError = true
+		}
+
+		// Validate phone if provided (should be 10 digits)
+		const phoneDigits = editPhone.replace(/\D/g, "")
+		if (editPhone && editPhone.trim().length > 0 && phoneDigits.length !== 10) {
+			setEditPhoneError("Phone number must be 10 digits")
+			hasError = true
+		}
+
+		if (hasError) return
+
+		setIsSavingClient(true)
+		try {
+			const updated = await updateClient(client.id, {
+				name: editName.trim() || null,
+				email: editEmail?.trim() || null,
+				phone: phoneDigits || null, // Store only digits
+				active: editActive,
+			})
+			setClient(updated)
+			onClose()
+		} catch (err) {
+			console.error("Failed to update client:", err)
+			alert("Failed to update client. See console for details.")
+		} finally {
+			setIsSavingClient(false)
+		}
+	}
+
+	const netBillable = client?.leads_paid_today || 0
+	const credited = (client?.leads_received_today || 0) - (client?.leads_paid_today || 0)
 	const lastCredit = credits.length > 0 ? credits[0] : null
 
 	const REASON_MAP: Record<string, string> = {
@@ -259,7 +346,13 @@ export default function ClientPage({ params }: ClientPageProps) {
 		setCurrentLeadPage(1)
 	}
 
-	const stats = calculateStats(leads, credits, client, selectedPeriod)
+	const stats = client
+		? calculateStats(leads, credits, client, selectedPeriod)
+		: {
+				totalLeads: 0,
+				totalCredits: 0,
+				netBillable: 0,
+		  }
 
 	async function handleCreditAdjustmentPress(onClose: () => void) {
 		if (!reason || notConfirmed || !client) return
@@ -298,6 +391,17 @@ export default function ClientPage({ params }: ClientPageProps) {
 		}
 	}
 
+	if (isLoading || !client) {
+		return (
+			<div className="flex items-center justify-center min-h-screen bg-gray-50">
+				<div className="flex flex-col items-center">
+					<Spinner color="primary" size="lg" />
+					<p className="mt-3 text-blue-700 font-medium">Loading...</p>
+				</div>
+			</div>
+		)
+	}
+
 	return (
 		<>
 			<AdminHeader
@@ -307,14 +411,17 @@ export default function ClientPage({ params }: ClientPageProps) {
 							crumbs={[
 								{ content: "Dashboard", href: "/admin/dashboard" },
 								{ content: "Clients", href: "/admin/clients" },
-								{ content: `${client.name}`, href: `/admin/clients/${client.id}` },
+								{
+									content: `${client?.name}`,
+									href: `/admin/clients/${client?.id}`,
+								},
 							]}
 						/>
 						<div className="flex items-center mt-2">
 							<h1 className="text-xl font-bold text-gray-900 leading-none mr-2">
-								{client.name}
+								{client?.name}
 							</h1>
-							{client.active ? (
+							{client?.active ? (
 								<div className="inline-flex items-center px-2 py-1 bg-green-100 rounded-full">
 									<CheckCircleIcon className="w-4 h-4 text-green-700 mr-0.5" />
 									<span className="text-green-700 font-semibold text-xs leading-none">
@@ -332,8 +439,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 						</div>
 						<div className="flex items-center mt-1">
 							<EnvelopeIcon className="text-gray-600 h-3 w-3 mr-1" />
-							<p className="text-gray-600 text-sm">{client.email}</p>
-							{client.email && (
+							<p className="text-gray-600 text-sm">{client?.email}</p>
+							{client?.email && (
 								<DocumentDuplicateIcon
 									onClick={handleCopyEmail}
 									className="text-gray-400 h-4 w-4 ml-2 cursor-pointer hover:text-blue-600 transition"
@@ -343,8 +450,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 						</div>
 						<div className="flex items-center">
 							<PhoneIcon className="text-gray-600 h-3 w-3 mr-1" />
-							<p className="text-gray-600 text-sm">{client.phone}</p>
-							{client.phone && (
+							<p className="text-gray-600 text-sm">{client?.phone}</p>
+							{client?.phone && (
 								<DocumentDuplicateIcon
 									onClick={handleCopyPhone}
 									className="text-gray-400 h-4 w-4 ml-2 cursor-pointer hover:text-blue-600 transition"
@@ -478,7 +585,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 						color1="bg-purple-100"
 						color2="text-purple-600"
 						borderColor="text-purple-600"
-						numToday={client.credit_balance}
+						numToday={client?.credit_balance ?? 0}
 						comparison={0}
 						comparisonTime="from last month"
 						title="Account Credit Balance"
@@ -504,10 +611,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 						<div className="flex items-center mt-2">
 							<div className="flex flex-col">
 								<h1 className="text-2xl font-bold font-sans">
-									{client.credit_balance} Credit
-									{client.credit_balance > 1 || client.credit_balance == 0
-										? "s"
-										: ""}
+									{client?.credit_balance} Credit
+									{client?.credit_balance !== 1 ? "s" : ""}
 								</h1>
 								<p className="text-sm font-medium text-gray-600">
 									Available for future deductions
@@ -676,7 +781,6 @@ export default function ClientPage({ params }: ClientPageProps) {
 					</div>
 				</div>
 			</AdminHeader>
-
 			{/* Edit Client Modal */}
 			<Modal isOpen={isOpen} onOpenChange={onOpenChange}>
 				<ModalContent>
@@ -684,15 +788,133 @@ export default function ClientPage({ params }: ClientPageProps) {
 						<>
 							<ModalHeader className="flex flex-col gap-1">
 								Edit Client Information
+								<div className="-mx-6 w-[calc(100%+3rem)] h-px bg-gray-200 mt-3"></div>
 							</ModalHeader>
+
 							<ModalBody>
-								<p>Form fields will go here...</p>
+								<div className="flex flex-col gap-4">
+									<Input
+										label="Client Name"
+										placeholder="e.g. John Doe"
+										value={editName}
+										onValueChange={(value) => {
+											setEditName(value)
+											if (value.trim().length > 0) {
+												setEditNameError("")
+											}
+										}}
+										size="sm"
+										isRequired
+										isInvalid={!!editNameError}
+										errorMessage={editNameError}
+									/>
+
+									<Input
+										label="Email"
+										placeholder="client@example.com"
+										value={editEmail}
+										onValueChange={(value) => {
+											setEditEmail(value)
+											if (!value || validateEmail(value.trim())) {
+												setEditEmailError("")
+											}
+										}}
+										onBlur={() => {
+											if (
+												editEmail &&
+												editEmail.trim().length > 0 &&
+												!validateEmail(editEmail.trim())
+											) {
+												setEditEmailError(
+													"Please enter a valid email address"
+												)
+											}
+										}}
+										size="sm"
+										type="email"
+										isInvalid={!!editEmailError}
+										errorMessage={editEmailError}
+									/>
+
+									<Input
+										label="Phone"
+										placeholder="(555) 555-5555"
+										value={editPhone}
+										onValueChange={(value) => {
+											const formatted = formatPhoneNumber(value)
+											setEditPhone(formatted)
+											const digits = value.replace(/\D/g, "")
+											if (!value || digits.length === 10) {
+												setEditPhoneError("")
+											}
+										}}
+										onBlur={() => {
+											const digits = editPhone.replace(/\D/g, "")
+											if (
+												editPhone &&
+												editPhone.trim().length > 0 &&
+												digits.length !== 10
+											) {
+												setEditPhoneError("Phone number must be 10 digits")
+											}
+										}}
+										size="sm"
+										type="tel"
+										maxLength={14}
+										isInvalid={!!editPhoneError}
+										errorMessage={editPhoneError}
+									/>
+
+									<Select
+										label="Account Status"
+										placeholder="Select status"
+										size="sm"
+										selectedKeys={[editActive ? "active" : "inactive"]}
+										onSelectionChange={(keys) => {
+											const v = Array.from(keys)[0] as string
+											setEditActive(v === "active")
+										}}
+									>
+										<SelectItem key="active">Active</SelectItem>
+										<SelectItem key="inactive">Inactive</SelectItem>
+									</Select>
+
+									<div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
+										<p>
+											<span className="font-medium">Note:</span> Setting to{" "}
+											<span className="font-semibold">Inactive</span> will not
+											delete the client — it only disables activity in lists.
+										</p>
+									</div>
+								</div>
 							</ModalBody>
+
 							<ModalFooter>
-								<Button color="danger" variant="light" onPress={onClose}>
+								<Button
+									color="danger"
+									variant="light"
+									onPress={() => {
+										setEditNameError("")
+										setEditEmailError("")
+										setEditPhoneError("")
+										onClose()
+									}}
+								>
 									Cancel
 								</Button>
-								<Button color="primary" onPress={onClose}>
+								<Button
+									color="primary"
+									isLoading={isSavingClient}
+									isDisabled={
+										isSavingClient ||
+										!editName ||
+										editName.trim().length === 0 ||
+										!!editNameError ||
+										!!editEmailError ||
+										!!editPhoneError
+									}
+									onPress={() => handleSaveClient(onClose)}
+								>
 									Save Changes
 								</Button>
 							</ModalFooter>
@@ -700,7 +922,6 @@ export default function ClientPage({ params }: ClientPageProps) {
 					)}
 				</ModalContent>
 			</Modal>
-
 			{/* Adjust Credits Modal */}
 			<Modal isOpen={isCreditModalOpen} onOpenChange={onCreditModalOpenChange}>
 				<ModalContent>
@@ -713,10 +934,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 										Current Balance:{" "}
 									</p>
 									<p className="text-sm font-sans text-gray-600 font-semibold items-center">
-										{client.credit_balance} credit
-										{client.credit_balance > 1 || client.credit_balance == 0
-											? "s"
-											: ""}
+										{client?.credit_balance} credit
+										{client?.credit_balance !== 1 ? "s" : ""}
 									</p>
 								</div>
 								<div className="-mx-6 w-[calc(100%+3rem)] h-px bg-gray-200 mt-3"></div>
@@ -775,22 +994,27 @@ export default function ClientPage({ params }: ClientPageProps) {
 										</p>
 										<p className="text-sm font-sans text-blue-800 font-semibold">
 											{adjustmentType == "add"
-												? client.credit_balance + Number(creditAmount)
-												: client.credit_balance - Number(creditAmount) < 0
-												? 0
-												: client.credit_balance - Number(creditAmount)}
+												? (client?.credit_balance ?? 0) +
+												  Number(creditAmount)
+												: Math.max(
+														0,
+														(client?.credit_balance ?? 0) -
+															Number(creditAmount)
+												  )}
 										</p>
 										<p className="text-sm font-sans text-blue-800">
 											credit
 											{adjustmentType == "add"
-												? client.credit_balance + Number(creditAmount) >
-														1 ||
-												  client.credit_balance + Number(creditAmount) == 0
+												? (client?.credit_balance ?? 0) +
+														Number(creditAmount) !==
+												  1
 													? "s"
 													: ""
-												: client.credit_balance - Number(creditAmount) <=
-														0 ||
-												  client.credit_balance - Number(creditAmount) > 1
+												: Math.max(
+														0,
+														(client?.credit_balance ?? 0) -
+															Number(creditAmount)
+												  ) !== 1
 												? "s"
 												: ""}
 										</p>

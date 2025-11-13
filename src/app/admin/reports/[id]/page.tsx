@@ -16,6 +16,7 @@ import {
 	BuildingOfficeIcon,
 	BanknotesIcon,
 } from "@heroicons/react/24/solid"
+import { Spinner } from "@heroui/react"
 
 interface ReportPageProps {
 	params: Promise<{ id: string }>
@@ -109,7 +110,16 @@ export default function ReportPage({ params }: ReportPageProps) {
 		})
 	}
 
-	if (isLoading) return <p className="text-center p-10">Loading report...</p>
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center min-h-screen bg-gray-50">
+				<div className="flex flex-col items-center">
+					<Spinner color="primary" size="lg" />
+					<p className="mt-3 text-blue-700 font-medium">Loading...</p>
+				</div>
+			</div>
+		)
+	}
 
 	const formattedDate = formatDate(report?.report_date)
 	const weekdayDate = formatDateWithWeekday(report?.report_date)

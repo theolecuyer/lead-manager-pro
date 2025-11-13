@@ -3,8 +3,9 @@ import type { Database } from "./database.types"
 
 type Client = Database["public"]["Tables"]["clients"]["Row"]
 type ClientInsert = Database["public"]["Tables"]["clients"]["Insert"]
+type ClientUpdate = Database["public"]["Tables"]["clients"]["Update"]
 
-// Create
+
 
 export interface CreateClientInput {
   name: string
@@ -12,6 +13,16 @@ export interface CreateClientInput {
   phone?: string
   active?: boolean
 }
+
+export interface UpdateClientInput {
+  name?: string | null
+  email?: string | null
+  phone?: string | null
+  active?: boolean | null
+}
+
+// Create
+
 
 export async function createNewClient(input: CreateClientInput) {
   const supabase = createClient()
@@ -142,4 +153,32 @@ export async function getClientsWithLeadsToday() {
   }
 
   return data as Client[]
+}
+
+// Update
+
+export async function updateClient(clientId: number, input: UpdateClientInput) {
+  const supabase = createClient()
+
+  const updateData: ClientUpdate = {
+    ...("name" in input ? { name: input.name } : {}),
+    ...("email" in input ? { email: input.email ?? null } : {}),
+    ...("phone" in input ? { phone: input.phone ?? null } : {}),
+    ...("active" in input ? { active: input.active ?? null } : {}),
+    updated_at: new Date().toISOString(),
+  }
+
+  const { data, error } = await supabase
+    .from("clients")
+    .update(updateData)
+    .eq("id", clientId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating client:", error)
+    throw new Error(error.message)
+  }
+
+  return data as Client
 }

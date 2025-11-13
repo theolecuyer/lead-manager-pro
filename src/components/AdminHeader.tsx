@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { redirect, usePathname } from "next/navigation"
+import { redirect, usePathname, useRouter } from "next/navigation"
 import {
 	HomeIcon,
 	UsersIcon,
@@ -21,6 +21,7 @@ interface AdminLayoutUIProps {
 }
 
 export default function AdminHeader({ children, header, rightAction }: AdminLayoutUIProps) {
+	const router = useRouter()
 	const pathname = usePathname()
 	const { user, profile, loading } = useAuth()
 
@@ -102,8 +103,12 @@ export default function AdminHeader({ children, header, rightAction }: AdminLayo
 									],
 								}}
 							>
-								<DropdownItem key="profile">Profile</DropdownItem>
-								<DropdownItem key="settings">Settings</DropdownItem>
+								<DropdownItem
+									key="settings"
+									onClick={() => router.push("/admin/settings")}
+								>
+									Settings
+								</DropdownItem>
 								<DropdownItem
 									key="logout"
 									className="text-red-600 font-medium hover:!bg-red-50 data-[hover=true]:!bg-red-50 cursor-pointer"

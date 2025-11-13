@@ -129,6 +129,7 @@ export type Database = {
           report_date: string
           total_credits: number
           total_leads: number
+          total_revenue: number
         }
         Insert: {
           active_clients_count: number
@@ -139,6 +140,7 @@ export type Database = {
           report_date: string
           total_credits: number
           total_leads: number
+          total_revenue?: number
         }
         Update: {
           active_clients_count?: number
@@ -149,6 +151,7 @@ export type Database = {
           report_date?: string
           total_credits?: number
           total_leads?: number
+          total_revenue?: number
         }
         Relationships: []
       }
@@ -284,6 +287,60 @@ export type Database = {
           },
         ]
       }
+      report_settings: {
+        Row: {
+          created_at: string
+          id: number
+          report_recipients: string[]
+          report_time: string | null
+          send_reports_on_weekends: boolean
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          report_recipients?: string[]
+          report_time?: string | null
+          send_reports_on_weekends?: boolean
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          report_recipients?: string[]
+          report_time?: string | null
+          send_reports_on_weekends?: boolean
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          auto_pause_inactive_days: number | null
+          auto_suspend_inactive_days: number | null
+          created_at: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          auto_pause_inactive_days?: number | null
+          auto_suspend_inactive_days?: number | null
+          created_at?: string
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_pause_inactive_days?: number | null
+          auto_suspend_inactive_days?: number | null
+          created_at?: string
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -303,7 +360,7 @@ export type Database = {
         Args: { client_name_input: string }
         Returns: number
       }
-      generate_daily_report: { Args: never; Returns: undefined }
+      generate_daily_report: { Args: never; Returns: string }
       get_todays_leads: {
         Args: never
         Returns: {

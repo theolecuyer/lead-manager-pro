@@ -204,12 +204,12 @@ export default function AdminDashboard() {
 					<DashboardIcon
 						icon={UserGroupIcon}
 						stats={false}
-						statsText="recieved leads yesterday"
+						statsText="from latest leads report"
 						textcolor="text-black"
 						color1="bg-purple-100"
 						color2="text-purple-600"
 						borderColor="text-purple-600"
-						numToday={totalClients}
+						numToday={latestReport?.active_clients_count ?? 0}
 						comparison={0}
 						comparisonTime=""
 						title="Active Clients"

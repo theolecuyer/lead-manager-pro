@@ -82,7 +82,7 @@ export default function ClientTableRow({
 				<p className="text-xs">today</p>
 			</div>
 			<p className={`text-medium font-sans font-semibold ${creditColor}`}>{credits}</p>
-			<p className="text-medium font-sans">${lifetime_revenue}</p>
+			<p className="text-sm font-sans font-semibold">${lifetime_revenue}</p>
 		</div>
 	)
 }

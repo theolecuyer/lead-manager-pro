@@ -92,7 +92,7 @@ export default function AdminReports() {
 								totalCredits={report.total_credits}
 								netBillable={report.net_billable}
 								activeClients={report.active_clients_count}
-								totalRevenue={report.net_billable * 50} // TODO: adjust later
+								totalRevenue={report.total_revenue}
 							/>
 						))
 					) : (

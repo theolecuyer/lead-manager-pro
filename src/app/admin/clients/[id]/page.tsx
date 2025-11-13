@@ -43,6 +43,7 @@ import {
 	XCircleIcon,
 	MagnifyingGlassIcon,
 	ChevronDownIcon,
+	PauseCircleIcon,
 } from "@heroicons/react/24/solid"
 import { Database } from "@/lib/supabase/database.types"
 import { adjustClientCredits, getCreditsByClientId } from "@/lib/supabase/credits"
@@ -106,6 +107,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 	const [editNameError, setEditNameError] = useState("")
 	const [editEmailError, setEditEmailError] = useState("")
 	const [editPhoneError, setEditPhoneError] = useState("")
+	const [editStatus, setEditStatus] = useState<"active" | "paused" | "suspended">("active")
 
 	const statusOptions = [
 		{ value: "all", label: "Any Status" },
@@ -243,8 +245,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 			setEditName(client.name ?? "")
 			setEditEmail(client.email ?? "")
 			setEditPhone(client.phone ? formatPhoneNumber(client.phone) : "")
-			setEditActive(client.active ?? true)
-			// Reset errors when modal opens
+			setEditStatus((client.status as "active" | "paused" | "suspended") ?? "active")
 			setEditNameError("")
 			setEditEmailError("")
 			setEditPhoneError("")
@@ -287,8 +288,8 @@ export default function ClientPage({ params }: ClientPageProps) {
 			const updated = await updateClient(client.id, {
 				name: editName.trim() || null,
 				email: editEmail?.trim() || null,
-				phone: phoneDigits || null, // Store only digits
-				active: editActive,
+				phone: phoneDigits || null,
+				status: editStatus,
 			})
 			setClient(updated)
 			onClose()
@@ -421,18 +422,25 @@ export default function ClientPage({ params }: ClientPageProps) {
 							<h1 className="text-xl font-bold text-gray-900 leading-none mr-2">
 								{client?.name}
 							</h1>
-							{client?.active ? (
+							{client?.status === "active" ? (
 								<div className="inline-flex items-center px-2 py-1 bg-green-100 rounded-full">
 									<CheckCircleIcon className="w-4 h-4 text-green-700 mr-0.5" />
 									<span className="text-green-700 font-semibold text-xs leading-none">
 										Active
 									</span>
 								</div>
+							) : client?.status === "paused" ? (
+								<div className="inline-flex items-center px-2 py-1 bg-yellow-100 rounded-full">
+									<PauseCircleIcon className="w-4 h-4 text-yellow-700 mr-0.5" />
+									<span className="text-yellow-700 font-semibold text-xs leading-none">
+										Paused
+									</span>
+								</div>
 							) : (
 								<div className="inline-flex items-center px-2 py-1 bg-red-100 rounded-full">
 									<XCircleIcon className="w-4 h-4 text-red-700 mr-0.5" />
 									<span className="text-red-700 font-semibold text-xs leading-none">
-										Inactive
+										Suspended
 									</span>
 								</div>
 							)}
@@ -869,14 +877,15 @@ export default function ClientPage({ params }: ClientPageProps) {
 										label="Account Status"
 										placeholder="Select status"
 										size="sm"
-										selectedKeys={[editActive ? "active" : "inactive"]}
+										selectedKeys={[editStatus]}
 										onSelectionChange={(keys) => {
 											const v = Array.from(keys)[0] as string
-											setEditActive(v === "active")
+											setEditStatus(v as "active" | "paused" | "suspended")
 										}}
 									>
 										<SelectItem key="active">Active</SelectItem>
-										<SelectItem key="inactive">Inactive</SelectItem>
+										<SelectItem key="paused">Paused</SelectItem>
+										<SelectItem key="suspended">Suspended</SelectItem>
 									</Select>
 
 									<div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">

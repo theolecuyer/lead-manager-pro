@@ -66,6 +66,7 @@ export default function AdminClients() {
 	const [newNameError, setNewNameError] = useState("")
 	const [newEmailError, setNewEmailError] = useState("")
 	const [newPhoneError, setNewPhoneError] = useState("")
+	const [newStatus, setNewStatus] = useState<"active" | "paused" | "suspended">("active")
 
 	const sortOptions = [
 		{ value: "name", label: "Sort by Name (A-Z)" },
@@ -163,7 +164,7 @@ export default function AdminClients() {
 				name: newName.trim(),
 				email: newEmail?.trim() || undefined,
 				phone: phoneDigits || undefined,
-				active: newActive,
+				status: newStatus,
 			})
 
 			// Refresh clients list
@@ -179,7 +180,12 @@ export default function AdminClients() {
 	}
 
 	const filteredClients = clients
-		.filter((c) => c.name?.toLowerCase().includes(search.toLowerCase()))
+		.filter((c) => {
+			const matchesSearch = c.name?.toLowerCase().includes(search.toLowerCase())
+			const matchesStatus = statusFilter === "all" || c.status === statusFilter
+
+			return matchesSearch && matchesStatus
+		})
 		.sort((a, b) => {
 			switch (sortBy) {
 				case "name":
@@ -355,7 +361,13 @@ export default function AdminClients() {
 											clientName={client.name || "Unknown"}
 											phone={client?.phone || "Unknown"}
 											email={client.email || "Unknown"}
-											status={client?.active || undefined}
+											status={
+												client?.status as
+													| "active"
+													| "paused"
+													| "suspended"
+													| undefined
+											}
 											totalLeads={client.total_leads_count}
 											today={client.leads_received_today}
 											credits={client.credit_balance}
@@ -471,14 +483,15 @@ export default function AdminClients() {
 										label="Account Status"
 										placeholder="Select status"
 										size="sm"
-										selectedKeys={[newActive ? "active" : "inactive"]}
+										selectedKeys={[newStatus]}
 										onSelectionChange={(keys) => {
 											const v = Array.from(keys)[0] as string
-											setNewActive(v === "active")
+											setNewStatus(v as "active" | "paused" | "suspended")
 										}}
 									>
 										<SelectItem key="active">Active</SelectItem>
-										<SelectItem key="inactive">Inactive</SelectItem>
+										<SelectItem key="paused">Paused</SelectItem>
+										<SelectItem key="suspended">Suspended</SelectItem>
 									</Select>
 
 									<div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">

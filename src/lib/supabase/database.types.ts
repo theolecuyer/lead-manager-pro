@@ -28,6 +28,7 @@ export type Database = {
           lifetime_revenue: number
           name: string | null
           phone: string | null
+          status: string
           total_leads_count: number
           updated_at: string | null
         }
@@ -44,6 +45,7 @@ export type Database = {
           lifetime_revenue?: number
           name?: string | null
           phone?: string | null
+          status?: string
           total_leads_count?: number
           updated_at?: string | null
         }
@@ -60,6 +62,7 @@ export type Database = {
           lifetime_revenue?: number
           name?: string | null
           phone?: string | null
+          status?: string
           total_leads_count?: number
           updated_at?: string | null
         }

@@ -8,7 +8,7 @@ export type ClientTableProps = {
 	clientName?: string
 	phone?: string
 	email?: string
-	status?: boolean
+	status?: "active" | "paused" | "suspended"
 	totalLeads?: number
 	today?: number
 	credits?: number
@@ -39,23 +39,28 @@ export default function ClientTableRow({
 		creditColor = "text-gray-700"
 	}
 
-	const handleView = () => {
-		console.log("view")
-	}
-
 	const statusObject = () => {
 		let bg, text, statusText
 		switch (status) {
-			case true:
+			case "active":
 				bg = "bg-green-100"
-				text = "text-green-500"
+				text = "text-green-700"
 				statusText = "Active"
 				break
-			case false:
+			case "paused":
+				bg = "bg-yellow-100"
+				text = "text-yellow-700"
+				statusText = "Paused"
+				break
+			case "suspended":
 				bg = "bg-red-100"
 				text = "text-red-700"
-				statusText = "Inactive"
+				statusText = "Suspended"
 				break
+			default:
+				bg = "bg-gray-100"
+				text = "text-gray-700"
+				statusText = "Unknown"
 		}
 		return (
 			<div className="ml-2">

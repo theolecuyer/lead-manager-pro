@@ -3,16 +3,23 @@ import type { Database } from "./database.types"
 
 type Client = Database["public"]["Tables"]["clients"]["Row"]
 type ClientInsert = Database["public"]["Tables"]["clients"]["Insert"]
-
-// Create
+type ClientUpdate = Database["public"]["Tables"]["clients"]["Update"]
 
 export interface CreateClientInput {
   name: string
   email?: string
   phone?: string
-  active?: boolean
+  status?: 'active' | 'paused' | 'suspended'
 }
 
+export interface UpdateClientInput {
+  name?: string | null
+  email?: string | null
+  phone?: string | null
+  status?: 'active' | 'paused' | 'suspended' | null
+}
+
+// Create
 export async function createNewClient(input: CreateClientInput) {
   const supabase = createClient()
 
@@ -20,7 +27,7 @@ export async function createNewClient(input: CreateClientInput) {
     name: input.name,
     email: input.email || null,
     phone: input.phone || null,
-    active: input.active ?? true,
+    status: input.status || 'active'
   }
 
   const { data, error } = await supabase
@@ -38,7 +45,6 @@ export async function createNewClient(input: CreateClientInput) {
 }
 
 // Read
-
 export async function getAllClients() {
   const supabase = createClient()
 
@@ -61,7 +67,7 @@ export async function getActiveClients() {
   const { data, error } = await supabase
     .from("clients")
     .select("*")
-    .eq("active", true)
+    .eq("status", "active")
     .order("name", { ascending: true })
 
   if (error) {
@@ -142,4 +148,31 @@ export async function getClientsWithLeadsToday() {
   }
 
   return data as Client[]
+}
+
+// Update
+export async function updateClient(clientId: number, input: UpdateClientInput) {
+  const supabase = createClient()
+
+  const updateData: ClientUpdate = {
+    ...("name" in input ? { name: input.name } : {}),
+    ...("email" in input ? { email: input.email ?? null } : {}),
+    ...("phone" in input ? { phone: input.phone ?? null } : {}),
+    ...("status" in input && input.status !== null ? { status: input.status } : {}),
+    updated_at: new Date().toISOString(),
+  }
+
+  const { data, error } = await supabase
+    .from("clients")
+    .update(updateData)
+    .eq("id", clientId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating client:", error)
+    throw new Error(error.message)
+  }
+
+  return data as Client
 }

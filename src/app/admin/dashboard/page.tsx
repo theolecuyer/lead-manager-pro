@@ -15,11 +15,12 @@ import { useState, useEffect, useRef } from "react"
 import ClientCardComponent from "@/components/ClientIcon"
 import Pagination from "@/components/Pagination"
 import AdminHeader from "@/components/AdminHeader"
-import { getAllClients } from "@/lib/supabase/clients"
+import { getActiveClients, getAllClients } from "@/lib/supabase/clients"
 import { Database } from "@/lib/supabase/database.types"
 import { getTodaysLeads } from "@/lib/supabase/leads"
 import LeadTableRow from "@/components/LeadTableRow"
 import { getLatestReport } from "@/lib/supabase/reports"
+import { Spinner } from "@heroui/react"
 
 export type Client = Database["public"]["Tables"]["clients"]["Row"]
 export type Lead = Database["public"]["Tables"]["leads"]["Row"]
@@ -54,7 +55,7 @@ export default function AdminDashboard() {
 
 	async function onLeadUpdated() {
 		try {
-			const [clientData, leadData] = await Promise.all([getAllClients(), getTodaysLeads()])
+			const [clientData, leadData] = await Promise.all([getActiveClients(), getTodaysLeads()])
 			setClients(clientData)
 			setTodaysLeads(leadData)
 		} catch (error) {
@@ -69,7 +70,7 @@ export default function AdminDashboard() {
 			try {
 				setIsLoadingClients(true)
 				const [clientData, leadData, latestReport] = await Promise.all([
-					getAllClients(),
+					getActiveClients(),
 					getTodaysLeads(),
 					getLatestReport(),
 				])
@@ -156,186 +157,210 @@ export default function AdminDashboard() {
 	const creditsToday = clients.reduce((sum, client) => sum + client.credits_issued_today, 0)
 	const billedToday = clients.reduce((sum, client) => sum + client.leads_paid_today, 0)
 
-	if (loading || isLoadingClients) return <p className="text-center">Loading...</p>
-
+	const isLoading = loading || isLoadingClients
 	return (
 		<AdminHeader header={<h1 className="text-xl font-semibold">Dashboard Overview</h1>}>
-			<div className="flex flex-col gap-6">
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-					<DashboardIcon
-						icon={ArrowUpTrayIcon}
-						stats={true}
-						statsText=""
-						textcolor="text-black"
-						color1="bg-blue-100"
-						color2="text-blue-600"
-						borderColor="text-blue-600"
-						numToday={leadsToday}
-						comparison={latestReport?.total_leads ?? 0}
-						comparisonTime="from last report"
-						title="Leads Delivered Today"
-					/>
-					<DashboardIcon
-						icon={CreditCardIcon}
-						stats={false}
-						statsText="poor quality leads"
-						textcolor="text-black"
-						color1="bg-red-100"
-						color2="text-red-600"
-						borderColor="text-red-500"
-						numToday={creditsToday}
-						comparison={0}
-						comparisonTime=""
-						title="Credits Issued Today"
-					/>
-					<DashboardIcon
-						icon={CurrencyDollarIcon}
-						stats={false}
-						statsText="ready to bill"
-						textcolor="text-green-600"
-						color1="bg-green-100"
-						color2="text-green-600"
-						borderColor="text-green-600"
-						numToday={billedToday}
-						comparison={0}
-						comparisonTime=""
-						title="Net Billable Leads"
-					/>
-					<DashboardIcon
-						icon={UserGroupIcon}
-						stats={false}
-						statsText="recieved leads yesterday"
-						textcolor="text-black"
-						color1="bg-purple-100"
-						color2="text-purple-600"
-						borderColor="text-purple-600"
-						numToday={totalClients}
-						comparison={0}
-						comparisonTime=""
-						title="Active Clients"
-					/>
-				</div>
-				<div>
-					<div className="bg-white p-5 rounded-md shadow col-span-4">
-						<h1 className="text-lg font-bold font-sans">Client Overview</h1>
-						<div className="flex items-center gap-3 my-3">
-							<div className="relative flex-1 max-w-md">
-								<MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
-								<input
-									type="text"
-									placeholder="Search clients..."
-									className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-sans"
-									value={search}
-									onChange={(e) => setSearch(e.target.value)}
+			<div className="relative">
+				{isLoading && (
+					<div className="absolute inset-0 -inset-x-6 -inset-y-6 flex justify-center backdrop-blur-sm z-50 min-h-full">
+						<div className="flex flex-col items-center mt-75">
+							<Spinner color="primary" size="lg" />
+							<p className="mt-3 text-blue-700 font-medium">Loading...</p>
+						</div>
+					</div>
+				)}
+				<div className={`${isLoading ? "blur-sm pointer-events-none select-none" : ""}`}>
+					<div className="flex flex-col gap-6">
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+							<DashboardIcon
+								icon={ArrowUpTrayIcon}
+								stats={true}
+								statsText=""
+								textcolor="text-black"
+								color1="bg-blue-100"
+								color2="text-blue-600"
+								borderColor="text-blue-600"
+								numToday={leadsToday}
+								comparison={latestReport?.total_leads ?? 0}
+								comparisonTime="from last report"
+								title="Leads Delivered Today"
+							/>
+							<DashboardIcon
+								icon={CreditCardIcon}
+								stats={false}
+								statsText="poor quality leads"
+								textcolor="text-black"
+								color1="bg-red-100"
+								color2="text-red-600"
+								borderColor="text-red-500"
+								numToday={creditsToday}
+								comparison={0}
+								comparisonTime=""
+								title="Credits Issued Today"
+							/>
+							<DashboardIcon
+								icon={CurrencyDollarIcon}
+								stats={false}
+								statsText="ready to bill"
+								textcolor="text-green-600"
+								color1="bg-green-100"
+								color2="text-green-600"
+								borderColor="text-green-600"
+								numToday={billedToday}
+								comparison={0}
+								comparisonTime=""
+								title="Net Billable Leads"
+							/>
+							<DashboardIcon
+								icon={UserGroupIcon}
+								stats={false}
+								statsText="from latest leads report"
+								textcolor="text-black"
+								color1="bg-purple-100"
+								color2="text-purple-600"
+								borderColor="text-purple-600"
+								numToday={latestReport?.active_clients_count ?? 0}
+								comparison={0}
+								comparisonTime=""
+								title="Active Clients"
+							/>
+						</div>
+						<div>
+							<div className="bg-white p-5 rounded-md shadow col-span-4">
+								<h1 className="text-lg font-bold font-sans">
+									Active Client Overview
+								</h1>
+								<div className="flex items-center gap-3 my-3">
+									<div className="relative flex-1 max-w-md">
+										<MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
+										<input
+											type="text"
+											placeholder="Search clients..."
+											className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-sans"
+											value={search}
+											onChange={(e) => setSearch(e.target.value)}
+										/>
+									</div>
+									<div
+										className="relative w-full min-w-[140px] max-w-[180px]"
+										ref={dropdownRef}
+									>
+										<button
+											onClick={() => setIsOpen(!isOpen)}
+											className="w-full h-10 px-3 text-left bg-white border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between gap-2 hover:cursor-pointer"
+										>
+											<span className="text-sm text-gray-700 truncate">
+												{
+													sortOptions.find((opt) => opt.value === sortBy)
+														?.label
+												}
+											</span>
+											<ChevronDownIcon
+												className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${
+													isOpen ? "rotate-180" : ""
+												}`}
+											/>
+										</button>
+
+										{isOpen && (
+											<div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+												{sortOptions.map((option) => (
+													<button
+														key={option.value}
+														onClick={() =>
+															handleSortChange(option.value)
+														}
+														className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 first:rounded-t-md last:rounded-b-md ${
+															sortBy === option.value
+																? "bg-blue-50 text-blue-600"
+																: "text-gray-700"
+														}`}
+													>
+														{option.label}
+													</button>
+												))}
+											</div>
+										)}
+									</div>
+								</div>
+								<div className="bg-gray-200 w-[calc(100%+2.5rem)] h-px -mx-5"></div>
+								<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-5 gap-4">
+									{paginatedClients.map((client) => (
+										<ClientCardComponent
+											key={client.id}
+											id={client.id}
+											name={client.name || "Unknown"}
+											leadsToday={client.leads_received_today}
+											billedToday={client.leads_paid_today}
+										/>
+									))}
+								</div>
+								<div className="bg-gray-200 w-[calc(100%+2.5rem)] h-px -mx-5 my-5"></div>
+								<Pagination
+									name="clients"
+									currentPage={currentClientPage}
+									totalPages={totalClientPages}
+									itemsPerPage={itemsPerClientPage}
+									totalItems={filteredClients.length}
+									onPageChange={setCurrentClientPage}
 								/>
 							</div>
-							<div
-								className="relative w-full min-w-[140px] max-w-[180px]"
-								ref={dropdownRef}
-							>
-								<button
-									onClick={() => setIsOpen(!isOpen)}
-									className="w-full h-10 px-3 text-left bg-white border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between gap-2 hover:cursor-pointer"
-								>
-									<span className="text-sm text-gray-700 truncate">
-										{sortOptions.find((opt) => opt.value === sortBy)?.label}
-									</span>
-									<ChevronDownIcon
-										className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${
-											isOpen ? "rotate-180" : ""
-										}`}
-									/>
-								</button>
+						</div>
+						<div className="bg-white p-5 rounded-md shadow col-span-4">
+							<h1 className="text-lg font-bold font-sans">Today's Leads</h1>
+							<p className="text-xs font-sans mt-0.5">
+								All leads recieved today across all clients
+							</p>
 
-								{isOpen && (
-									<div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-										{sortOptions.map((option) => (
-											<button
-												key={option.value}
-												onClick={() => handleSortChange(option.value)}
-												className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 first:rounded-t-md last:rounded-b-md ${
-													sortBy === option.value
-														? "bg-blue-50 text-blue-600"
-														: "text-gray-700"
-												}`}
-											>
-												{option.label}
-											</button>
-										))}
-									</div>
+							<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
+								<p className="text-small font-sans font-medium text-gray-600 ml-2">
+									CLIENT
+								</p>
+								<p className="text-small font-sans font-medium text-gray-600">
+									LEAD NAME
+								</p>
+								<p className="text-small font-sans font-medium text-gray-600">
+									TIME
+								</p>
+								<p className="text-small font-sans font-medium text-gray-600 -ml-[15%]">
+									PRODUCT
+								</p>
+								<p className="text-small font-sans font-medium text-gray-600">
+									STATUS
+								</p>
+								<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
+									ACTIONS
+								</p>
+							</div>
+
+							<div className="flex flex-col -mx-5">
+								{paginatedLeads.length > 0 ? (
+									paginatedLeads.map((lead) => (
+										<LeadTableRow
+											key={lead.id}
+											lead={lead}
+											clientId={lead.client?.id}
+											clientName={lead.client?.name || "Unknown"}
+											onLeadUpdated={onLeadUpdated}
+										/>
+									))
+								) : (
+									<p className="text-center text-sm text-gray-500 p-5">
+										No leads received today.
+									</p>
 								)}
 							</div>
-						</div>
-						<div className="bg-gray-200 w-[calc(100%+2.5rem)] h-px -mx-5"></div>
-						<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-5 gap-4">
-							{paginatedClients.map((client) => (
-								<ClientCardComponent
-									key={client.id}
-									id={client.id}
-									name={client.name || "Unknown"}
-									leadsToday={client.leads_received_today}
-									billedToday={client.leads_paid_today}
+							<div className="rounded-b-md border-t border-gray-200 bg-gray-50 p-3 px-5 -mx-5 -my-5 mt-auto">
+								<Pagination
+									name="leads"
+									currentPage={currentLeadPage}
+									totalPages={totalLeadPages}
+									itemsPerPage={itemsPerLeadPage}
+									totalItems={todaysLeads.length}
+									onPageChange={setCurrentLeadPage}
 								/>
-							))}
+							</div>
 						</div>
-						<div className="bg-gray-200 w-[calc(100%+2.5rem)] h-px -mx-5 my-5"></div>
-						<Pagination
-							name="clients"
-							currentPage={currentClientPage}
-							totalPages={totalClientPages}
-							itemsPerPage={itemsPerClientPage}
-							totalItems={filteredClients.length}
-							onPageChange={setCurrentClientPage}
-						/>
-					</div>
-				</div>
-				<div className="bg-white p-5 rounded-md shadow col-span-4">
-					<h1 className="text-lg font-bold font-sans">Today's Leads</h1>
-					<p className="text-xs font-sans mt-0.5">
-						All leads recieved today across all clients
-					</p>
-
-					<div className="grid grid-cols-6 grid-rows-1 border-y border-gray-200 bg-gray-50 p-3 px-5 -mx-5 mt-5 items-center">
-						<p className="text-small font-sans font-medium text-gray-600 ml-2">
-							CLIENT
-						</p>
-						<p className="text-small font-sans font-medium text-gray-600">LEAD NAME</p>
-						<p className="text-small font-sans font-medium text-gray-600">TIME</p>
-						<p className="text-small font-sans font-medium text-gray-600 -ml-[15%]">
-							PRODUCT
-						</p>
-						<p className="text-small font-sans font-medium text-gray-600">STATUS</p>
-						<p className="flex justify-end text-small font-sans font-medium text-gray-600 mr-2">
-							ACTIONS
-						</p>
-					</div>
-
-					<div className="flex flex-col -mx-5">
-						{paginatedLeads.length > 0 ? (
-							paginatedLeads.map((lead) => (
-								<LeadTableRow
-									key={lead.id}
-									lead={lead}
-									clientId={lead.client?.id}
-									clientName={lead.client?.name || "Unknown"}
-									onLeadUpdated={onLeadUpdated}
-								/>
-							))
-						) : (
-							<p className="text-center text-sm text-gray-500 p-5">
-								No leads received today.
-							</p>
-						)}
-					</div>
-					<div className="rounded-b-md border-t border-gray-200 bg-gray-50 p-3 px-5 -mx-5 -my-5 mt-auto">
-						<Pagination
-							name="leads"
-							currentPage={currentLeadPage}
-							totalPages={totalLeadPages}
-							itemsPerPage={itemsPerLeadPage}
-							totalItems={todaysLeads.length}
-							onPageChange={setCurrentLeadPage}
-						/>
 					</div>
 				</div>
 			</div>

@@ -15,9 +15,18 @@ export async function login(formData: FormData) {
 		password,
 	})
 
-	if (error || !data?.user) {
+	if (error) {
 		console.error("Login error:", error)
-		redirect("/error")
+		// Return a user-friendly error message
+		throw new Error(
+			error.message === "Invalid login credentials"
+				? "Invalid email or password. Please try again."
+				: error.message
+		)
+	}
+
+	if (!data?.user) {
+		throw new Error("Login failed. Please try again.")
 	}
 
 	revalidatePath("/", "layout")
@@ -31,7 +40,7 @@ export async function signup(formData: FormData) {
 	const password = formData.get("password") as string
 	const full_name = (formData.get("full_name") as string) ?? "test"
 	const username = (formData.get("username") as string) ?? ""
-	const user_role = (formData.get("user_role") as "admin" | "client") ?? "admin" // current defailt
+	const user_role = (formData.get("user_role") as "admin" | "client") ?? "admin"
 
 	console.log("signup payload:", { email, password, full_name, username, user_role })
 
@@ -49,7 +58,7 @@ export async function signup(formData: FormData) {
 
 	if (error) {
 		console.error("Signup error:", error)
-		redirect("/error")
+		throw new Error(error.message || "Failed to create account. Please try again.")
 	}
 
 	revalidatePath("/", "layout")

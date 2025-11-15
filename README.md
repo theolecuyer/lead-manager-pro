@@ -1,13 +1,13 @@
 # Lead Manager Pro
 
-A comprehensive lead tracking and billing platform designed for companies that distribute customer leads to multiple service businesses.
+A comprehensive lead tracking and billing platform designed for Fixfindr to manage incoming customer leads for multiple service businesses.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black)
 ![React](https://img.shields.io/badge/React-19.1.0-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
 
-## Hero Screenshot
+## Dashboard Screenshot
 
 ![Lead Manager Pro Dashboard](./docs/screenshots/hero.jpeg)
 
@@ -23,7 +23,7 @@ _Lead Manager Pro Dashboard - Real-time lead tracking and client management_
 
 ## Overview
 
-Lead Manager Pro is a lead tracking and billing platform built for companies that manage customer leads distributed to multiple service businesses. The platform automates lead tracking, client billing, credit management, and performance reporting to ensure every lead is properly accounted for and billed.
+Lead Manager Pro is a lead tracking and billing platform built for Fixfindr to manage incoming customer leads for multiple service businesses. The platform automates lead tracking, client billing, credit management, and performance reporting to ensure every lead is properly accounted for and billed.
 
 ### How It Works
 
@@ -85,7 +85,7 @@ Lead Manager Pro is a lead tracking and billing platform built for companies tha
 -   Dispute documentation
 -   Automated audit trails
 
-## 🏗 Architecture
+## Architecture
 
 ![System Architecture](./docs/screenshots/lead_manager_pro_architecture.png)
 

@@ -4,8 +4,6 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
 	const supabase = await createClient()
-
-	// Check if a user's logged in
 	const {
 		data: { user },
 	} = await supabase.auth.getUser()
@@ -15,5 +13,6 @@ export async function POST(req: NextRequest) {
 	}
 
 	revalidatePath("/", "layout")
-	return NextResponse.redirect(new URL("/login", req.url))
+	
+	return NextResponse.redirect(new URL("/login", req.nextUrl.origin))
 }

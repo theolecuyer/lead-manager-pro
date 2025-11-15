@@ -7,28 +7,38 @@ import {
 	EnvelopeIcon,
 	EyeSlashIcon,
 	EyeIcon,
+	ExclamationTriangleIcon,
 } from "@heroicons/react/16/solid"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { login } from "../actions"
 
-type LoginData = {
-	email: string
-	password: string
-}
-
 export default function LoginPage() {
 	const router = useRouter()
 	const [visible, setVisible] = useState(false)
-	const [submitted, setSubmitted] = useState<LoginData | null>(null)
-	const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState("")
 
 	const toggleVisibility = () => setVisible(!visible)
 
 	async function onSubmit(e: any) {
 		e.preventDefault()
-		const form = new FormData(e.currentTarget)
-		await login(form)
+		setError("")
+		setIsLoading(true)
+
+		try {
+			const form = new FormData(e.currentTarget)
+			await login(form)
+		} catch (err: any) {
+			if (err?.digest?.startsWith("NEXT_REDIRECT")) {
+				return
+			}
+
+			console.error("Login error:", err)
+
+			setError(err?.message || "Invalid email or password. Please try again.")
+			setIsLoading(false)
+		}
 	}
 
 	return (
@@ -73,6 +83,8 @@ export default function LoginPage() {
 							name="email"
 							type="email"
 							placeholder="admin@company.com"
+							isDisabled={isLoading}
+							onChange={() => setError("")}
 						/>
 					</div>
 
@@ -120,12 +132,23 @@ export default function LoginPage() {
 							name="password"
 							type={visible ? "text" : "password"}
 							placeholder="Enter your password"
+							isDisabled={isLoading}
+							onChange={() => setError("")}
 						/>
 					</div>
+
+					{error && (
+						<div className="flex items-start gap-2 bg-red-50 p-3 rounded-lg mt-3">
+							<ExclamationTriangleIcon className="w-5 h-5 text-red-600 flex-shrink-0" />
+							<p className="text-sm text-red-900">{error}</p>
+						</div>
+					)}
 
 					<Button
 						type="submit"
 						className="bg-blue-500 text-sm text-white font-semibold p-2 rounded-md mt-2"
+						isLoading={isLoading}
+						isDisabled={isLoading}
 					>
 						Sign In
 					</Button>
@@ -137,6 +160,7 @@ export default function LoginPage() {
 							onClick={() => {
 								router.push("/forgot-password")
 							}}
+							disabled={isLoading}
 						>
 							Forgot your password?
 						</button>
@@ -156,6 +180,7 @@ export default function LoginPage() {
 								router.push("/create-account")
 							}}
 							className="text-sm text-blue-600 px-1 font-medium hover:underline"
+							disabled={isLoading}
 						>
 							Sign up
 						</button>

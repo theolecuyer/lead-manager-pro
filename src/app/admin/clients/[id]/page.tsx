@@ -458,7 +458,9 @@ export default function ClientPage({ params }: ClientPageProps) {
 						</div>
 						<div className="flex items-center">
 							<PhoneIcon className="text-gray-600 h-3 w-3 mr-1" />
-							<p className="text-gray-600 text-sm">{client?.phone}</p>
+							<p className="text-gray-600 text-sm">
+								{client?.phone ? formatPhoneNumber(client.phone) : ""}
+							</p>
 							{client?.phone && (
 								<DocumentDuplicateIcon
 									onClick={handleCopyPhone}

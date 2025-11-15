@@ -15,7 +15,7 @@ import { useState, useEffect, useRef } from "react"
 import ClientCardComponent from "@/components/ClientIcon"
 import Pagination from "@/components/Pagination"
 import AdminHeader from "@/components/AdminHeader"
-import { getAllClients } from "@/lib/supabase/clients"
+import { getActiveClients, getAllClients } from "@/lib/supabase/clients"
 import { Database } from "@/lib/supabase/database.types"
 import { getTodaysLeads } from "@/lib/supabase/leads"
 import LeadTableRow from "@/components/LeadTableRow"
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
 
 	async function onLeadUpdated() {
 		try {
-			const [clientData, leadData] = await Promise.all([getAllClients(), getTodaysLeads()])
+			const [clientData, leadData] = await Promise.all([getActiveClients(), getTodaysLeads()])
 			setClients(clientData)
 			setTodaysLeads(leadData)
 		} catch (error) {
@@ -70,7 +70,7 @@ export default function AdminDashboard() {
 			try {
 				setIsLoadingClients(true)
 				const [clientData, leadData, latestReport] = await Promise.all([
-					getAllClients(),
+					getActiveClients(),
 					getTodaysLeads(),
 					getLatestReport(),
 				])
@@ -227,7 +227,9 @@ export default function AdminDashboard() {
 						</div>
 						<div>
 							<div className="bg-white p-5 rounded-md shadow col-span-4">
-								<h1 className="text-lg font-bold font-sans">Client Overview</h1>
+								<h1 className="text-lg font-bold font-sans">
+									Active Client Overview
+								</h1>
 								<div className="flex items-center gap-3 my-3">
 									<div className="relative flex-1 max-w-md">
 										<MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />

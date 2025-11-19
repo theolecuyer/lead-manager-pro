@@ -17,16 +17,18 @@ export async function login(formData: FormData) {
 
 	if (error) {
 		console.error("Login error:", error)
-		// Return a user-friendly error message
-		throw new Error(
-			error.message === "Invalid login credentials"
+		// Return error instead of throwing
+		return {
+			error: error.message === "Invalid login credentials"
 				? "Invalid email or password. Please try again."
 				: error.message
-		)
+		}
 	}
 
 	if (!data?.user) {
-		throw new Error("Login failed. Please try again.")
+		return {
+			error: "Login failed. Please try again."
+		}
 	}
 
 	revalidatePath("/", "layout")
@@ -58,7 +60,9 @@ export async function signup(formData: FormData) {
 
 	if (error) {
 		console.error("Signup error:", error)
-		throw new Error(error.message || "Failed to create account. Please try again.")
+		return {
+			error: error.message || "Failed to create account. Please try again."
+		}
 	}
 
 	revalidatePath("/", "layout")

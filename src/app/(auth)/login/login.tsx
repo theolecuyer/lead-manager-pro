@@ -28,15 +28,17 @@ export default function LoginPage() {
 
 		try {
 			const form = new FormData(e.currentTarget)
-			await login(form)
+			const result = await login(form)
+			if (result?.error) {
+				setError(result.error)
+				setIsLoading(false)
+			}
 		} catch (err: any) {
 			if (err?.digest?.startsWith("NEXT_REDIRECT")) {
 				return
 			}
-
-			console.error("Login error:", err)
-
-			setError(err?.message || "Invalid email or password. Please try again.")
+			console.error("Unexpected login error:", err)
+			setError("An unexpected error occurred. Please try again.")
 			setIsLoading(false)
 		}
 	}

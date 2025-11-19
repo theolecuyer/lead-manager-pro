@@ -9,7 +9,7 @@ A comprehensive lead tracking and billing platform designed for Fixfindr to mana
 
 ## Dashboard Screenshot
 
-![Lead Manager Pro Dashboard](./docs/screenshots/hero.jpeg)
+![Lead Manager Pro Dashboard](https://raw.githubusercontent.com/theolecuyer/lead-manager-pro/main/docs/screenshots/hero.jpeg)
 
 _Lead Manager Pro Dashboard - Real-time lead tracking and client management_
 
@@ -87,7 +87,7 @@ Lead Manager Pro is a lead tracking and billing platform built for Fixfindr to m
 
 ## Architecture
 
-![System Architecture](./docs/screenshots/lead_manager_pro_architecture.png)
+![System Architecture](https://raw.githubusercontent.com/theolecuyer/lead-manager-pro/main/docs/screenshots/lead_manager_pro_architecture.png)
 
 _System Architecture Diagram_
 
@@ -137,37 +137,37 @@ _System Architecture Diagram_
 
 ### Login Page
 
-![Login Page](./docs/screenshots/login.jpeg)
+![Login Page](https://raw.githubusercontent.com/theolecuyer/lead-manager-pro/main/docs/screenshots/login.jpeg)
 
 _Secure authentication with Supabase Auth_
 
 ### Clients List
 
-![Clients Management](./docs/screenshots/clients.jpeg)
+![Clients Management](https://raw.githubusercontent.com/theolecuyer/lead-manager-pro/main/docs/screenshots/clients.jpeg)
 
 _Manage all client accounts and credit balances_
 
 ### Client Detail
 
-![Client Detail View](./docs/screenshots/client-detail.jpeg)
+![Client Detail View](https://raw.githubusercontent.com/theolecuyer/lead-manager-pro/main/docs/screenshots/client-detail.jpeg)
 
 _Individual client performance and lead history_
 
 ### Reports Overview
 
-![Reports Dashboard](./docs/screenshots/reports.jpeg)
+![Reports Dashboard](https://raw.githubusercontent.com/theolecuyer/lead-manager-pro/main/docs/screenshots/reports.jpeg)
 
 _Automated daily performance reports_
 
 ### Report Detail
 
-![Report Detail View](./docs/screenshots/report-detail.jpeg)
+![Report Detail View](https://raw.githubusercontent.com/theolecuyer/lead-manager-pro/main/docs/screenshots/report-detail.jpeg)
 
 _Detailed breakdown of daily operations_
 
 ### Settings
 
-![Settings Page](./docs/screenshots/settings.jpeg)
+![Settings Page](https://raw.githubusercontent.com/theolecuyer/lead-manager-pro/main/docs/screenshots/settings.jpeg)
 
 _System configuration and user preferences_
 

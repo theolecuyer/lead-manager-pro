@@ -5,6 +5,6 @@ import { data } from './data/resource';
 
 defineBackend({
   auth,
-  data,
+  // data, Using self-managed AppSync API
   testFunction,
 });

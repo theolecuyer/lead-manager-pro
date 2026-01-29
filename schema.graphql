@@ -1,0 +1,52 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Client {
+  active: Boolean!
+  credit_balance: Int
+  email: String
+  id: ID!
+  name: String!
+  phone: String
+}
+
+type Mutation {
+  createClient(input: CreateClientInput!): Client
+  createOrganization(name: String): Organization
+  deleteClient(id: ID!): Boolean
+  deleteOrganization(id: ID!): Boolean
+  updateClient(input: UpdateClientInput!): Client
+  updateOrganization(input: UpdateOrganizationInput): Organization
+}
+
+type Organization {
+  id: ID!
+  name: String!
+}
+
+type Query {
+  getClient(id: ID!): Client
+  getClients: [Client!]!
+}
+
+input CreateClientInput {
+  active: Boolean
+  email: String
+  name: String!
+  phone: String
+}
+
+input UpdateClientInput {
+  active: Boolean
+  email: String
+  id: ID!
+  name: String
+  phone: String
+}
+
+input UpdateOrganizationInput {
+  id: ID!
+  name: String!
+}
